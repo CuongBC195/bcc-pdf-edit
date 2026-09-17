@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Scissors, Eye, PlusCircle, RotateCw, X, Plus } from 'lucide-react';
+import { Scissors, Eye, RotateCw, X, Plus } from 'lucide-react';
 import type { SplitRule, PDFPageThumbnail } from '../types/pdf';
 import { renderPageThumbnail } from '../services/thumbnailService';
 import { PageDetailModal } from './PageDetailModal';
@@ -326,14 +326,23 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {!activeRule && selectedPages.length > 0 && (
+          {selectedPages.length > 0 && (
             <button
               onClick={onCreateRuleFromSelected}
-              className="btn btn-success btn-sm animate-fade-in"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              className="btn btn-primary btn-sm animate-fade-in"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 14px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                boxShadow: '0 0 14px rgba(6, 182, 212, 0.4)',
+              }}
+              title="Cắt tách các trang đang chọn thành một file con mới"
             >
-              <PlusCircle size={14} />
-              <span>Tạo File từ {selectedPages.length} trang đã chọn</span>
+              <Scissors size={14} />
+              <span>Cắt {selectedPages.length} trang đã chọn thành File con</span>
             </button>
           )}
         </div>
@@ -361,7 +370,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '36px 65px 65px minmax(160px, 1.5fr) 85px 135px',
+              gridTemplateColumns: '36px 55px 55px minmax(140px, 1.4fr) 75px 165px',
               gap: '10px',
               alignItems: 'center',
               padding: '8px 12px',
@@ -408,7 +417,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             <div>Bản xem</div>
             <div>Phân bổ File con</div>
             <div style={{ textAlign: 'center' }}>Góc xoay</div>
-            <div style={{ textAlign: 'right', paddingRight: '6px' }}>Thao tác</div>
+            <div style={{ textAlign: 'right', paddingRight: '8px' }}>Thao tác / Cắt</div>
           </div>
 
           {/* Finder Table Rows */}
@@ -448,31 +457,31 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             }
 
             return (
-              <div
-                key={pageNum}
-                id={`finder-row-${pageNum}`}
-                onMouseEnter={() => {
-                  setHoveredPage(pageNum);
-                  setFocusedPage(pageNum);
-                }}
-                onMouseLeave={() => {
-                  setHoveredPage((prev) => (prev === pageNum ? null : prev));
-                }}
-                onClick={(e) => {
-                  setFocusedPage(pageNum);
-                  onTogglePageSelect(pageNum, e.shiftKey);
-                }}
-                onDoubleClick={() => {
-                  setFocusedPage(pageNum);
-                  setPreviewPage(pageNum);
-                }}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '36px 65px 65px minmax(160px, 1.5fr) 85px 135px',
-                  gap: '10px',
-                  alignItems: 'center',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid var(--border-subtle)',
+              <React.Fragment key={pageNum}>
+                <div
+                  id={`finder-row-${pageNum}`}
+                  onMouseEnter={() => {
+                    setHoveredPage(pageNum);
+                    setFocusedPage(pageNum);
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredPage((prev) => (prev === pageNum ? null : prev));
+                  }}
+                  onClick={(e) => {
+                    setFocusedPage(pageNum);
+                    onTogglePageSelect(pageNum, e.shiftKey);
+                  }}
+                  onDoubleClick={() => {
+                    setFocusedPage(pageNum);
+                    setPreviewPage(pageNum);
+                  }}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '36px 55px 55px minmax(140px, 1.4fr) 75px 165px',
+                    gap: '10px',
+                    alignItems: 'center',
+                    padding: '6px 12px',
+                    borderBottom: '1px solid var(--border-subtle)',
                   background: rowBg,
                   cursor: 'pointer',
                   userSelect: 'none',
@@ -697,13 +706,13 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                     }}
                     className="btn btn-ghost btn-sm"
                     style={{
-                      padding: '3px 8px',
+                      padding: '3px 7px',
                       fontSize: '0.72rem',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      color: isHovered ? 'var(--accent-cyan)' : 'var(--border-active)',
-                      border: isHovered ? '1px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
+                      gap: '3px',
+                      color: isHovered ? 'var(--accent-cyan)' : 'var(--text-dim)',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: 'var(--radius-sm)',
                       background: 'var(--bg-card)',
                       transition: 'all 0.15s ease',
@@ -711,10 +720,10 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                     title="Xem trước pop up (Phím Space hoặc Nhấp đúp)"
                   >
                     <Eye size={12} />
-                    <span>Xem [Space]</span>
+                    <span>Xem</span>
                   </button>
 
-                  {!activeRule && pageNum < totalPageCount && (
+                  {pageNum < totalPageCount && (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -723,24 +732,97 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                       }}
                       className="btn btn-secondary btn-sm"
                       style={{
-                        padding: '2px 7px',
-                        fontSize: '0.7rem',
+                        padding: '3px 9px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '3px',
-                        color: 'var(--border-active)',
+                        gap: '4px',
+                        color: 'var(--accent-cyan)',
+                        border: '1px solid rgba(6, 182, 212, 0.45)',
+                        background: isHovered ? 'rgba(6, 182, 212, 0.2)' : 'rgba(6, 182, 212, 0.09)',
+                        borderRadius: 'var(--radius-sm)',
                         whiteSpace: 'nowrap',
+                        boxShadow: isHovered ? '0 0 10px rgba(6, 182, 212, 0.25)' : 'none',
+                        transition: 'all 0.15s ease',
                       }}
-                      title={`Cắt tách file con mới sau trang #${pageNum}`}
+                      title={`Cắt tách thành file con mới sau trang #${pageNum}`}
                     >
-                      <Scissors size={11} />
-                      <span>Cắt</span>
+                      <Scissors size={12} />
+                      <span>Cắt tại đây</span>
                     </button>
                   )}
                 </div>
               </div>
-            );
-          })}
+
+              {/* Interactive Cut Separator Line between rows */}
+              {pageNum < totalPageCount && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSplitAtPage(pageNum);
+                  }}
+                  className="split-cut-divider"
+                  style={{
+                    height: '8px',
+                    margin: '-4px 0',
+                    position: 'relative',
+                    zIndex: 8,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0,
+                    transition: 'all 0.18s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                    e.currentTarget.style.height = '18px';
+                    e.currentTarget.style.margin = '1px 0';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '0';
+                    e.currentTarget.style.height = '8px';
+                    e.currentTarget.style.margin = '-4px 0';
+                  }}
+                  title={`Bấm để cắt file con mới giữa trang #${pageNum} và #${pageNum + 1}`}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '20px',
+                      right: '20px',
+                      height: '1px',
+                      background: 'var(--accent-cyan)',
+                      borderTop: '1px dashed var(--accent-cyan)',
+                      boxShadow: '0 0 6px rgba(6, 182, 212, 0.6)',
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: 'relative',
+                      zIndex: 9,
+                      background: 'var(--bg-surface-elevated)',
+                      border: '1px solid var(--accent-cyan)',
+                      borderRadius: '12px',
+                      padding: '1px 9px',
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      color: 'var(--accent-cyan)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      boxShadow: '0 2px 8px rgba(6, 182, 212, 0.35)',
+                    }}
+                  >
+                    <Scissors size={11} />
+                    <span>Cắt giữa trang #{pageNum} & #{pageNum + 1}</span>
+                  </span>
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
         </div>
 
         {/* High-Resolution Large Page Preview Modal with Zoom and Navigation */}

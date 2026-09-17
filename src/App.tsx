@@ -532,9 +532,17 @@ export const App: React.FC = () => {
     }
 
     // Case 2: An existing rule contains pageNum and continues past it -> split that specific rule into two!
-    const targetRuleIndex = rules.findIndex(
-      (r) => r.isValid && r.pages.includes(pageNum) && r.pages.some((p) => p > pageNum)
-    );
+    let targetRuleIndex = -1;
+    if (activeRuleId) {
+      targetRuleIndex = rules.findIndex(
+        (r) => r.id === activeRuleId && r.isValid && r.pages.includes(pageNum) && r.pages.some((p) => p > pageNum)
+      );
+    }
+    if (targetRuleIndex === -1) {
+      targetRuleIndex = rules.findIndex(
+        (r) => r.isValid && r.pages.includes(pageNum) && r.pages.some((p) => p > pageNum)
+      );
+    }
 
     if (targetRuleIndex !== -1) {
       const oldRule = rules[targetRuleIndex];
@@ -547,9 +555,18 @@ export const App: React.FC = () => {
         pages: pagesA,
       };
 
+      let idxToUse = rules.length;
+      let candidateName = generateNewRuleName(idxToUse, pagesB);
+      const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
+      while (existingNames.has(candidateName.toLowerCase())) {
+        idxToUse++;
+        candidateName = generateNewRuleName(idxToUse, pagesB);
+      }
+
+      const ruleBId = `rule_${Date.now()}`;
       const ruleB: SplitRule = {
-        id: `rule_${Date.now()}`,
-        name: oldRule.name.replace(/\.pdf$/i, '_Phan2.pdf'),
+        id: ruleBId,
+        name: candidateName,
         pageRangeStr: formatPagesToRange(pagesB),
         pages: pagesB,
         color: PRESET_COLORS[rules.length % PRESET_COLORS.length],
@@ -559,6 +576,7 @@ export const App: React.FC = () => {
       const updated = [...rules];
       updated.splice(targetRuleIndex, 1, ruleA, ruleB);
       setRules(updated);
+      setActiveRuleId(ruleBId);
       return;
     }
 
@@ -586,8 +604,9 @@ export const App: React.FC = () => {
         candidateName = generateNewRuleName(idxToUse, pagesA);
       }
 
+      const newRuleId = `rule_${Date.now()}`;
       const newRule: SplitRule = {
-        id: `rule_${Date.now()}`,
+        id: newRuleId,
         name: candidateName,
         pageRangeStr: formatPagesToRange(pagesA),
         pages: pagesA,
@@ -595,6 +614,7 @@ export const App: React.FC = () => {
         isValid: true,
       };
       setRules((prev) => [...prev, newRule]);
+      setActiveRuleId(newRuleId);
     }
   };
 
