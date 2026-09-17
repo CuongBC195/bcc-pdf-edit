@@ -295,58 +295,129 @@ export const App: React.FC = () => {
 
   // Page selection logic:
   // - If activeRuleId is selected: Clicking a page directly adds/removes it from that active rule!
-  // - If no activeRuleId: Multi-selects pages for creating a new child rule
-  const handleTogglePageSelect = useCallback((pageNum: number, isShift: boolean) => {
-    if (activeRuleId) {
-      setRules((prev) =>
-        prev.map((r) => {
-          if (r.id !== activeRuleId) return r;
-          const exists = r.pages.includes(pageNum);
-          const newPages = exists
-            ? r.pages.filter((p) => p !== pageNum)
-            : [...r.pages, pageNum].sort((a, b) => a - b);
-          const newRangeStr = formatPagesToRange(newPages);
-          return {
-            ...r,
-            pages: newPages,
-            pageRangeStr: newRangeStr,
-            isValid: newPages.length > 0,
-            errorMsg: newPages.length === 0 ? 'File chưa chọn trang nào' : undefined,
-          };
-        })
-      );
-      return;
-    }
-
-    if (isShift && lastClickedPage !== null) {
-      const start = Math.min(lastClickedPage, pageNum);
-      const end = Math.max(lastClickedPage, pageNum);
-      const range: number[] = [];
-      for (let p = start; p <= end; p++) {
-        range.push(p);
+  // - If no activeRuleId:
+  //    + If page is already assigned to a rule: clicking it unassigns it from that rule
+  //    + If page is unassigned: toggles page in selectedPages for multi-selection
+  const handleTogglePageSelect = useCallback(
+    (pageNum: number, isShift: boolean) => {
+      if (activeRuleId) {
+        setRules((prev) =>
+          prev.map((r) => {
+            if (r.id !== activeRuleId) return r;
+            const exists = r.pages.includes(pageNum);
+            const newPages = exists
+              ? r.pages.filter((p) => p !== pageNum)
+              : [...r.pages, pageNum].sort((a, b) => a - b);
+            const newRangeStr = formatPagesToRange(newPages);
+            return {
+              ...r,
+              pages: newPages,
+              pageRangeStr: newRangeStr,
+              isValid: newPages.length > 0,
+              errorMsg: newPages.length === 0 ? 'File chưa chọn trang nào' : undefined,
+            };
+          })
+        );
+        return;
       }
-      setSelectedPages((prev) => Array.from(new Set([...prev, ...range])).sort((a, b) => a - b));
-    } else {
-      setSelectedPages((prev) => {
-        if (prev.includes(pageNum)) {
-          return prev.filter((p) => p !== pageNum);
-        } else {
-          return [...prev, pageNum].sort((a, b) => a - b);
+
+      // Check if this page belongs to an existing rule
+      const containingRule = rules.find((r) => r.pages.includes(pageNum));
+      if (containingRule) {
+        setRules((prev) =>
+          prev.map((r) => {
+            if (r.id !== containingRule.id) return r;
+            const newPages = r.pages.filter((p) => p !== pageNum);
+            const newRangeStr = formatPagesToRange(newPages);
+            return {
+              ...r,
+              pages: newPages,
+              pageRangeStr: newRangeStr,
+              isValid: newPages.length > 0,
+              errorMsg: newPages.length === 0 ? 'File chưa chọn trang nào' : undefined,
+            };
+          })
+        );
+        return;
+      }
+
+      // Page is unassigned -> toggle in selectedPages
+      if (isShift && lastClickedPage !== null) {
+        const start = Math.min(lastClickedPage, pageNum);
+        const end = Math.max(lastClickedPage, pageNum);
+        const range: number[] = [];
+        for (let p = start; p <= end; p++) {
+          range.push(p);
         }
-      });
-      setLastClickedPage(pageNum);
-    }
-  }, [activeRuleId, lastClickedPage]);
+        setSelectedPages((prev) => Array.from(new Set([...prev, ...range])).sort((a, b) => a - b));
+      } else {
+        setSelectedPages((prev) => {
+          if (prev.includes(pageNum)) {
+            return prev.filter((p) => p !== pageNum);
+          } else {
+            return [...prev, pageNum].sort((a, b) => a - b);
+          }
+        });
+        setLastClickedPage(pageNum);
+      }
+    },
+    [activeRuleId, lastClickedPage, rules]
+  );
 
   const handleSelectAll = useCallback(() => {
     if (!pdfMeta) return;
-    setSelectedPages(Array.from({ length: pdfMeta.pageCount }, (_, i) => i + 1));
-  }, [pdfMeta]);
+    const allPages = Array.from({ length: pdfMeta.pageCount }, (_, i) => i + 1);
+    if (activeRuleId) {
+      setRules((prev) =>
+        prev.map((r) =>
+          r.id === activeRuleId
+            ? {
+                ...r,
+                pages: allPages,
+                pageRangeStr: formatPagesToRange(allPages),
+                isValid: true,
+                errorMsg: undefined,
+              }
+            : r
+        )
+      );
+      return;
+    }
+    setSelectedPages(allPages);
+  }, [pdfMeta, activeRuleId]);
 
   const handleDeselectAll = useCallback(() => {
-    setSelectedPages([]);
-    setLastClickedPage(null);
-  }, []);
+    if (activeRuleId) {
+      setRules((prev) =>
+        prev.map((r) =>
+          r.id === activeRuleId
+            ? {
+                ...r,
+                pages: [],
+                pageRangeStr: '',
+                isValid: false,
+                errorMsg: 'File chưa chọn trang nào',
+              }
+            : r
+        )
+      );
+      return;
+    }
+    if (selectedPages.length > 0) {
+      setSelectedPages([]);
+      setLastClickedPage(null);
+    } else {
+      setRules((prev) =>
+        prev.map((r) => ({
+          ...r,
+          pages: [],
+          pageRangeStr: '',
+          isValid: false,
+          errorMsg: 'File chưa chọn trang nào',
+        }))
+      );
+    }
+  }, [activeRuleId, selectedPages.length]);
 
   // Rotation handlers
   const handleRotatePage = useCallback((pageNum: number) => {
@@ -1031,6 +1102,7 @@ export const App: React.FC = () => {
                 onClearActiveRule={() => setActiveRuleId(null)}
                 initialScrollTop={initialGridScrollTop}
                 onScrollChange={(top) => setGridScrollTop(top)}
+                onSelectRule={(id) => setActiveRuleId((prev) => (prev === id ? null : id))}
               />
 
               {/* Right: Rules & Folder Structure Panel */}

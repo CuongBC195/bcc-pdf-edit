@@ -23,6 +23,7 @@ interface VisualThumbnailGridProps {
   onClearActiveRule: () => void;
   initialScrollTop?: number;
   onScrollChange?: (top: number) => void;
+  onSelectRule?: (ruleId: string) => void;
 }
 
 export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
@@ -44,6 +45,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
   onClearActiveRule,
   initialScrollTop,
   onScrollChange,
+  onSelectRule,
 }) => {
   const [thumbnails, setThumbnails] = useState<Record<number, PDFPageThumbnail>>({});
   const [zoomLevel, setZoomLevel] = useState<'sm' | 'md' | 'lg'>('md');
@@ -173,6 +175,18 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
   const assignedCount = Array.from(pageRuleMap.values()).filter((list) => list.length > 0).length;
   const unassignedCount = totalPageCount - assignedCount;
   const rotatedPagesCount = Object.values(pageRotations).filter((r) => r % 360 !== 0).length;
+
+  // Header checkbox state logic:
+  // When activeRule is set: check if all or some pages are in this active rule
+  // When no activeRule: check if all or some pages have been chosen ("đã chọn vô" / assigned or selected)
+  const chosenCount = activeRule
+    ? activeRule.pages.length
+    : Array.from({ length: totalPageCount }, (_, i) => i + 1).filter(
+        (p) => (pageRuleMap.get(p) || []).length > 0 || selectedPages.includes(p)
+      ).length;
+
+  const isHeaderChecked = totalPageCount > 0 && chosenCount === totalPageCount;
+  const isHeaderIndeterminate = chosenCount > 0 && chosenCount < totalPageCount;
 
   const filteredPages = Array.from({ length: totalPageCount }, (_, i) => i + 1).filter((p) => {
     const isAssigned = (pageRuleMap.get(p) || []).length > 0;
@@ -525,16 +539,28 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             <div style={{ textAlign: 'center' }}>
               <input
                 type="checkbox"
-                checked={selectedPages.length === totalPageCount && totalPageCount > 0}
+                ref={(el) => {
+                  if (el) el.indeterminate = isHeaderIndeterminate;
+                }}
+                checked={isHeaderChecked}
                 onChange={() => {
-                  if (selectedPages.length === totalPageCount) {
+                  if (isHeaderChecked) {
                     onDeselectAll();
                   } else {
                     onSelectAll();
                   }
                 }}
-                title="Chọn tất cả các trang"
-                style={{ cursor: 'pointer', accentColor: 'var(--accent-cyan)' }}
+                title={
+                  isHeaderChecked
+                    ? 'Tất cả các trang đã được phân bổ/chọn. Bấm để bỏ chọn.'
+                    : 'Bấm để chọn tất cả các trang'
+                }
+                style={{
+                  cursor: 'pointer',
+                  accentColor: activeRule ? activeRule.color : 'var(--accent-cyan)',
+                  width: '15px',
+                  height: '15px',
+                }}
               />
             </div>
             <div>Trang</div>
@@ -555,6 +581,17 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
 
             const primaryRule = assignedRules[0] || null;
             const isInActiveRule = activeRule ? activeRule.pages.includes(pageNum) : false;
+            const isAssigned = assignedRules.length > 0;
+
+            // Accurate, logical checkbox state:
+            // - If activeRule is open: checked if page belongs to that active rule
+            // - If no activeRule: checked if page is already assigned to a file ("đã chọn vô"), or is manually selected
+            const isPageChecked = activeRule ? isInActiveRule : (isAssigned || isSelected);
+            const checkboxColor = activeRule
+              ? activeRule.color
+              : primaryRule
+              ? primaryRule.color
+              : 'var(--accent-cyan)';
 
             let rowBg = 'transparent';
             if (activeRule && isInActiveRule) {
@@ -615,14 +652,29 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <input
                     type="checkbox"
-                    checked={activeRule ? isInActiveRule : isSelected}
-                    onChange={() => {}}
+                    checked={isPageChecked}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onTogglePageSelect(pageNum, false);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                     style={{
                       cursor: 'pointer',
                       width: '15px',
                       height: '15px',
-                      accentColor: activeRule ? activeRule.color : 'var(--accent-cyan)',
+                      accentColor: checkboxColor,
                     }}
+                    title={
+                      activeRule
+                        ? isInActiveRule
+                          ? 'Bấm để bỏ trang này khỏi file đang chọn'
+                          : 'Bấm để thêm trang này vào file đang chọn'
+                        : isAssigned
+                        ? `Đã phân bổ vào File ${rules.findIndex((r) => r.id === primaryRule?.id) + 1} (${primaryRule?.name}). Bấm để bỏ chọn.`
+                        : isSelected
+                        ? 'Đang chọn trang này. Bấm để bỏ chọn.'
+                        : 'Bấm để chọn trang này'
+                    }
                   />
                 </div>
 
@@ -708,31 +760,6 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                               </span>
                             );
                           })}
-                      </div>
-                    ) : assignedRules.length > 0 ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                        {assignedRules.map((rule) => {
-                          const rIdx = rules.findIndex((r) => r.id === rule.id);
-                          return (
-                            <span
-                              key={rule.id}
-                              className="badge"
-                              style={{
-                                background: `${rule.color}20`,
-                                color: rule.color,
-                                border: `1.5px solid ${rule.color}65`,
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                              }}
-                            >
-                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-                              <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
-                            </span>
-                          );
-                        })}
                         <span
                           style={{
                             fontSize: '0.72rem',
@@ -761,8 +788,13 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                       {assignedRules.map((rule) => {
                         const rIdx = rules.findIndex((r) => r.id === rule.id);
                         return (
-                          <span
+                          <button
+                            type="button"
                             key={rule.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onSelectRule) onSelectRule(rule.id);
+                            }}
                             className="badge"
                             style={{
                               background: `${rule.color}20`,
@@ -773,11 +805,13 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '5px',
+                              cursor: 'pointer',
                             }}
+                            title={`Bấm để chọn và chỉnh sửa File ${rIdx + 1}: ${rule.name}`}
                           >
                             <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
                             <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
-                          </span>
+                          </button>
                         );
                       })}
                     </div>
@@ -896,6 +930,13 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
 
             // Two-way active rule binding check
             const isInActiveRule = activeRule ? activeRule.pages.includes(pageNum) : false;
+            const isAssigned = assignedRules.length > 0;
+            const isPageChecked = activeRule ? isInActiveRule : (isAssigned || isSelected);
+            const checkboxColor = activeRule
+              ? activeRule.color
+              : primaryRule
+              ? primaryRule.color
+              : 'var(--accent-cyan)';
 
             // Compute dynamic card border and shadow - Always preserves primary rule color!
             let cardBorder = '1px solid var(--border-subtle)';
@@ -982,11 +1023,11 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   </span>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {/* Active rule checkmark */}
-                    {activeRule && isInActiveRule && (
+                    {/* Checkmark badge when page is chosen / assigned */}
+                    {isPageChecked && (
                       <span
                         style={{
-                          background: activeRule.color,
+                          background: checkboxColor,
                           color: '#ffffff',
                           borderRadius: '50%',
                           width: '18px',
@@ -994,26 +1035,15 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
+                          boxShadow: `0 0 6px ${checkboxColor}66`,
                         }}
-                        title="Thuộc file đang chọn"
-                      >
-                        <Check size={12} strokeWidth={3} />
-                      </span>
-                    )}
-
-                    {/* Normal multi-select checkmark */}
-                    {!activeRule && isSelected && (
-                      <span
-                        style={{
-                          background: 'var(--accent-cyan)',
-                          color: '#000',
-                          borderRadius: '50%',
-                          width: '18px',
-                          height: '18px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
+                        title={
+                          activeRule
+                            ? 'Thuộc file đang chọn'
+                            : primaryRule
+                            ? `Đã phân bổ vào File ${primaryRuleIdx + 1}: ${primaryRule.name}`
+                            : 'Đang chọn'
+                        }
                       >
                         <Check size={12} strokeWidth={3} />
                       </span>
