@@ -943,7 +943,7 @@ export const App: React.FC = () => {
 
   return (
     <>
-      <div className="app-container" style={{ paddingBottom: validRules.length > 0 ? '90px' : '24px' }}>
+      <div className="app-container" style={{ paddingBottom: '36px' }}>
         <Header
           theme={theme}
           onToggleTheme={toggleTheme}
@@ -1078,8 +1078,8 @@ export const App: React.FC = () => {
                 gridTemplateColumns: 'minmax(0, 1.4fr) minmax(380px, 1fr)',
                 gap: '24px',
                 alignItems: 'stretch',
-                height: validRules.length > 0 ? 'calc(100vh - 290px)' : 'calc(100vh - 230px)',
-                minHeight: '540px',
+                height: validRules.length > 0 ? 'calc(100vh - 350px)' : 'calc(100vh - 270px)',
+                minHeight: '480px',
               }}
             >
               {/* Left: Visual Thumbnail Grid */}
@@ -1123,6 +1123,20 @@ export const App: React.FC = () => {
               />
             </div>
 
+            {/* Integrated Export Action Bar */}
+            {validRules.length > 0 || exportProgress.status !== 'idle' ? (
+              <ExportActionBar
+                validRuleCount={validRules.length}
+                totalAssignedPages={totalAssignedPages}
+                unassignedPagesCount={unassignedPagesCount}
+                hasErrors={hasErrors}
+                onExportZip={handleExportZip}
+                onSaveDraft={handleSaveDraft}
+                exportProgress={exportProgress}
+                defaultZipName={`${pdfMeta.name.replace(/\.[^/.]+$/, '')}_Splitted.zip`}
+              />
+            ) : null}
+
             {/* Batch Rename Modal */}
             <BatchRenameModal
               isOpen={isBatchRenameOpen}
@@ -1135,20 +1149,6 @@ export const App: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Bottom Dock Action Bar - Only shows when there are actually valid files to export */}
-      {pdfMeta && (validRules.length > 0 || exportProgress.status !== 'idle') && (
-        <ExportActionBar
-          validRuleCount={validRules.length}
-          totalAssignedPages={totalAssignedPages}
-          unassignedPagesCount={unassignedPagesCount}
-          hasErrors={hasErrors}
-          onExportZip={handleExportZip}
-          onSaveDraft={handleSaveDraft}
-          exportProgress={exportProgress}
-          defaultZipName={`${pdfMeta.name.replace(/\.[^/.]+$/, '')}_Splitted.zip`}
-        />
-      )}
 
       {/* Workspace Recent Files Popup Modal */}
       {isRecentModalOpen &&
