@@ -500,14 +500,17 @@ export const App: React.FC = () => {
     setLastClickedPage(null);
   };
 
-  // Split at specific page boundary (Scissors line click)
+  // Split at specific page boundary (Scissors line or button click)
   const handleSplitAtPage = (pageNum: number) => {
     if (!pdfMeta || pageNum >= pdfMeta.pageCount) return;
 
+    const pageA = pageNum;
+    const pageB = pageNum + 1;
+
     // Case 1: When no rules exist yet -> Split entire document into 2 files at this cut point!
     if (rules.length === 0) {
-      const pagesA = Array.from({ length: pageNum }, (_, i) => i + 1);
-      const pagesB = Array.from({ length: pdfMeta.pageCount - pageNum }, (_, i) => pageNum + 1 + i);
+      const pagesA = Array.from({ length: pageA }, (_, i) => i + 1);
+      const pagesB = Array.from({ length: pdfMeta.pageCount - pageA }, (_, i) => pageA + 1 + i);
 
       const newRules: SplitRule[] = [
         {
@@ -528,26 +531,27 @@ export const App: React.FC = () => {
         },
       ];
       setRules(newRules);
+      setActiveRuleId(newRules[1].id);
       return;
     }
 
-    // Case 2: An existing rule contains pageNum and continues past it -> split that specific rule into two!
+    // Case 2: An existing rule contains pageA and extends into or past pageB -> split that specific rule into two!
     let targetRuleIndex = -1;
     if (activeRuleId) {
       targetRuleIndex = rules.findIndex(
-        (r) => r.id === activeRuleId && r.isValid && r.pages.includes(pageNum) && r.pages.some((p) => p > pageNum)
+        (r) => r.id === activeRuleId && r.isValid && r.pages.includes(pageA) && r.pages.some((p) => p >= pageB)
       );
     }
     if (targetRuleIndex === -1) {
       targetRuleIndex = rules.findIndex(
-        (r) => r.isValid && r.pages.includes(pageNum) && r.pages.some((p) => p > pageNum)
+        (r) => r.isValid && r.pages.includes(pageA) && r.pages.some((p) => p >= pageB)
       );
     }
 
     if (targetRuleIndex !== -1) {
       const oldRule = rules[targetRuleIndex];
-      const pagesA = oldRule.pages.filter((p) => p <= pageNum);
-      const pagesB = oldRule.pages.filter((p) => p > pageNum);
+      const pagesA = oldRule.pages.filter((p) => p <= pageA);
+      const pagesB = oldRule.pages.filter((p) => p >= pageB);
 
       const ruleA: SplitRule = {
         ...oldRule,
@@ -580,41 +584,95 @@ export const App: React.FC = () => {
       return;
     }
 
-    // Case 3: Cut at an unassigned page boundary -> create a new rule ending at pageNum
+    // Case 3: Check if pageA and pageB already belong to two different files!
+    const ruleA = rules.find((r) => r.isValid && r.pages.includes(pageA));
+    const ruleB = rules.find((r) => r.isValid && r.pages.includes(pageB));
+
+    if (ruleA && ruleB && ruleA.id !== ruleB.id) {
+      setDetailedAlert({
+        type: 'info',
+        title: 'Vị trí này đã được chia tách',
+        message: `Trang #${pageA} và trang #${pageB} vốn đã thuộc 2 file con riêng biệt rồi.`,
+        details: [
+          `Trang #${pageA} thuộc: "${ruleA.name}"`,
+          `Trang #${pageB} thuộc: "${ruleB.name}"`,
+          'Ranh giới giữa 2 trang này đã được chia đôi, bạn không cần phải cắt thêm tại đây.',
+        ],
+      });
+      return;
+    }
+
+    // Case 4: pageA is assigned, but pageB is unassigned -> Collect unassigned pages starting from pageB into a new rule!
     const assignedPages = new Set(rules.filter((r) => r.isValid).flatMap((r) => r.pages));
-    let startPage = 1;
-    for (let p = pageNum; p >= 1; p--) {
-      if (assignedPages.has(p)) {
-        startPage = p + 1;
-        break;
-      }
-    }
-    const pagesA: number[] = [];
-    for (let p = startPage; p <= pageNum; p++) {
-      if (!assignedPages.has(p)) pagesA.push(p);
-    }
-
-    if (pagesA.length > 0) {
-      const nextIdx = rules.length + 1;
-      let idxToUse = rules.length;
-      let candidateName = generateNewRuleName(idxToUse, pagesA);
-      const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
-      while (existingNames.has(candidateName.toLowerCase())) {
-        idxToUse++;
-        candidateName = generateNewRuleName(idxToUse, pagesA);
+    if (ruleA && !assignedPages.has(pageB)) {
+      const pagesB: number[] = [];
+      for (let p = pageB; p <= pdfMeta.pageCount; p++) {
+        if (assignedPages.has(p)) break;
+        pagesB.push(p);
       }
 
-      const newRuleId = `rule_${Date.now()}`;
-      const newRule: SplitRule = {
-        id: newRuleId,
-        name: candidateName,
-        pageRangeStr: formatPagesToRange(pagesA),
-        pages: pagesA,
-        color: PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length],
-        isValid: true,
-      };
-      setRules((prev) => [...prev, newRule]);
-      setActiveRuleId(newRuleId);
+      if (pagesB.length > 0) {
+        const nextIdx = rules.length + 1;
+        let idxToUse = rules.length;
+        let candidateName = generateNewRuleName(idxToUse, pagesB);
+        const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
+        while (existingNames.has(candidateName.toLowerCase())) {
+          idxToUse++;
+          candidateName = generateNewRuleName(idxToUse, pagesB);
+        }
+
+        const newRuleId = `rule_${Date.now()}`;
+        const newRule: SplitRule = {
+          id: newRuleId,
+          name: candidateName,
+          pageRangeStr: formatPagesToRange(pagesB),
+          pages: pagesB,
+          color: PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length],
+          isValid: true,
+        };
+        setRules((prev) => [...prev, newRule]);
+        setActiveRuleId(newRuleId);
+        return;
+      }
+    }
+
+    // Case 5: pageA is unassigned -> Collect unassigned pages ending at pageA into a new rule!
+    if (!assignedPages.has(pageA)) {
+      let startPage = 1;
+      for (let p = pageA; p >= 1; p--) {
+        if (assignedPages.has(p)) {
+          startPage = p + 1;
+          break;
+        }
+      }
+      const pagesA: number[] = [];
+      for (let p = startPage; p <= pageA; p++) {
+        if (!assignedPages.has(p)) pagesA.push(p);
+      }
+
+      if (pagesA.length > 0) {
+        const nextIdx = rules.length + 1;
+        let idxToUse = rules.length;
+        let candidateName = generateNewRuleName(idxToUse, pagesA);
+        const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
+        while (existingNames.has(candidateName.toLowerCase())) {
+          idxToUse++;
+          candidateName = generateNewRuleName(idxToUse, pagesA);
+        }
+
+        const newRuleId = `rule_${Date.now()}`;
+        const newRule: SplitRule = {
+          id: newRuleId,
+          name: candidateName,
+          pageRangeStr: formatPagesToRange(pagesA),
+          pages: pagesA,
+          color: PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length],
+          isValid: true,
+        };
+        setRules((prev) => [...prev, newRule]);
+        setActiveRuleId(newRuleId);
+        return;
+      }
     }
   };
 

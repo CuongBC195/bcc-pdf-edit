@@ -689,7 +689,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                     }}
                     className="btn btn-ghost btn-sm"
                     style={{ padding: '2px 4px', fontSize: '0.7rem', color: 'var(--text-muted)' }}
-                    title="Xoay trang này 90°"
+                    data-tooltip={`Xoay trang #${pageNum} 90°`}
                   >
                     <RotateCw size={12} />
                   </button>
@@ -718,7 +718,8 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                       background: 'var(--bg-card)',
                       transition: 'all 0.15s ease',
                     }}
-                    title="Xem trước pop-up [Phím Space hoặc Nhấp đúp]"
+                    data-tooltip="Xem trước pop-up [Space]"
+                    data-tooltip-pos="left"
                   >
                     <Eye size={13} />
                   </button>
@@ -745,7 +746,8 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                         boxShadow: isHovered ? '0 0 10px rgba(6, 182, 212, 0.25)' : 'none',
                         transition: 'all 0.15s ease',
                       }}
-                      title={`Cắt tách thành file con mới sau trang #${pageNum}`}
+                      data-tooltip={`Cắt tách file mới sau trang #${pageNum}`}
+                      data-tooltip-pos="left"
                     >
                       <Scissors size={13} />
                     </button>
@@ -755,7 +757,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                 </div>
               </div>
 
-              {/* Interactive Cut Separator Line between rows */}
+              {/* Interactive Cut Separator Line between rows (delays 0.3s on hover) */}
               {pageNum < totalPageCount && (
                 <div
                   onClick={(e) => {
@@ -763,29 +765,6 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                     onSplitAtPage(pageNum);
                   }}
                   className="split-cut-divider"
-                  style={{
-                    height: '8px',
-                    margin: '-4px 0',
-                    position: 'relative',
-                    zIndex: 8,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: 0,
-                    transition: 'all 0.18s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                    e.currentTarget.style.height = '18px';
-                    e.currentTarget.style.margin = '1px 0';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '0';
-                    e.currentTarget.style.height = '8px';
-                    e.currentTarget.style.margin = '-4px 0';
-                  }}
-                  title={`Bấm để cắt file con mới giữa trang #${pageNum} và #${pageNum + 1}`}
                 >
                   <div
                     style={{
