@@ -1063,13 +1063,13 @@ export const App: React.FC = () => {
               defaultPattern={defaultNamingPattern}
             />
 
-            {/* 2-Column Split Pane Workspace - Stretched to equal height */}
+            {/* 2-Column Split Pane Workspace - Matched heights with independent scrollbars */}
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'minmax(0, 1.4fr) minmax(360px, 1fr)',
                 gap: '24px',
-                alignItems: 'stretch',
+                alignItems: 'start',
               }}
             >
               {/* Left: Visual Thumbnail Grid */}

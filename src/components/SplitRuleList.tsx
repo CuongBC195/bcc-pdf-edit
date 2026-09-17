@@ -122,11 +122,12 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
         </button>
       </div>
 
-      {/* Rules Scrollable Container - Fills available height naturally without artificial maxHeight cut-off */}
+      {/* Rules Scrollable Container - Matches left panel height and scrolls smoothly */}
       <div
         style={{
           flex: 1,
-          minHeight: 0,
+          minHeight: '520px',
+          maxHeight: 'calc(100vh - 270px)',
           overflowY: 'auto',
           paddingRight: '6px',
           paddingBottom: '16px',
