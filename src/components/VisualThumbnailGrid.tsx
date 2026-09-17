@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Scissors, Check, ZoomIn, ZoomOut, Eye, PlusCircle, RotateCw, X, LayoutGrid, List, Info, Plus } from 'lucide-react';
+import { Scissors, Check, ZoomIn, ZoomOut, Eye, PlusCircle, RotateCw, X, LayoutGrid, List, Plus } from 'lucide-react';
 import type { SplitRule, PDFPageThumbnail } from '../types/pdf';
 import { renderPageThumbnail } from '../services/thumbnailService';
 import { PageDetailModal } from './PageDetailModal';
@@ -450,50 +450,6 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
               <span>Xem trước</span>
             </button>
           )}
-        </div>
-      </div>
-
-      <div
-        style={{
-          flexShrink: 0,
-          fontSize: '0.78rem',
-          color: 'var(--text-muted)',
-          marginBottom: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '8px',
-          padding: '8px 12px',
-          background: 'var(--bg-card)',
-          borderRadius: '8px',
-          border: '1px solid var(--border-subtle)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Info size={14} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
-          <span>
-            {activeRule
-              ? 'Đang chỉnh sửa file con: Nhấp vào dòng để thêm hoặc bớt trang.'
-              : 'Dạng danh sách Finder macOS: Chọn dòng và nhấn phím Space để mở Quick Look pop-up.'}
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <RotateCw size={12} style={{ color: 'var(--text-dim)' }} />
-            <span>Xoay trang</span>
-          </div>
-          <span style={{ color: 'var(--border-subtle)' }}>•</span>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <kbd style={{ padding: '1px 4px', fontSize: '0.68rem', borderRadius: '4px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>↑</kbd>
-            <kbd style={{ padding: '1px 4px', fontSize: '0.68rem', borderRadius: '4px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>↓</kbd>
-            <span>Di chuyển</span>
-          </div>
-          <span style={{ color: 'var(--border-subtle)' }}>•</span>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <kbd style={{ padding: '1px 5px', fontSize: '0.68rem', borderRadius: '4px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>Space</kbd>
-            <span>Quick Look</span>
-          </div>
         </div>
       </div>
 
