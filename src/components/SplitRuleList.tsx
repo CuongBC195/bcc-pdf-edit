@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Files, FolderTree } from 'lucide-react';
+import { Plus, Files, FolderTree, Sparkles, Settings } from 'lucide-react';
 import type { SplitRule } from '../types/pdf';
 import { SplitRuleCard } from './SplitRuleCard';
 
@@ -15,6 +15,8 @@ interface SplitRuleListProps {
   onChangeColor: (id: string, color: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
+  defaultPattern?: string;
+  onOpenNamingSettings?: () => void;
 }
 
 export const SplitRuleList: React.FC<SplitRuleListProps> = ({
@@ -29,6 +31,8 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
   onChangeColor,
   onDelete,
   onDuplicate,
+  defaultPattern,
+  onOpenNamingSettings,
 }) => {
   const totalAssignedPages = rules.reduce((acc, r) => (r.isValid ? acc + r.pages.length : acc), 0);
 
@@ -51,14 +55,56 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
           paddingBottom: '16px',
           borderBottom: '1px solid var(--border-subtle)',
           marginBottom: '16px',
+          flexWrap: 'wrap',
+          gap: '10px',
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <FolderTree size={18} color="var(--accent-cyan)" />
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
               Cấu hình các File con ({rules.length})
             </h3>
+
+            {defaultPattern ? (
+              <button
+                type="button"
+                onClick={onOpenNamingSettings}
+                className="badge badge-amber"
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '0.72rem',
+                  padding: '2px 8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  textDecoration: 'none',
+                }}
+                title="Nhấp để thay đổi mẫu đặt tên file mặc định"
+              >
+                <Sparkles size={11} />
+                <span>Mẫu: {defaultPattern.length > 22 ? defaultPattern.slice(0, 22) + '...' : defaultPattern}</span>
+              </button>
+            ) : onOpenNamingSettings ? (
+              <button
+                type="button"
+                onClick={onOpenNamingSettings}
+                className="btn btn-ghost btn-sm"
+                style={{
+                  fontSize: '0.72rem',
+                  padding: '2px 6px',
+                  color: 'var(--text-dim)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="Thiết lập mẫu đặt tên file tự động (ví dụ: A38-011...{cs}...)"
+              >
+                <Settings size={11} />
+                <span>Cài mẫu tên</span>
+              </button>
+            ) : null}
           </div>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', margin: '2px 0 0 0' }}>
             Tổng số trang đã chọn: <strong>{totalAssignedPages} trang</strong>
@@ -76,14 +122,15 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
         </button>
       </div>
 
-      {/* Rules Scrollable Container */}
+      {/* Rules Scrollable Container - Perfectly matches left panel height */}
       <div
         style={{
           flex: 1,
           overflowY: 'auto',
-          maxHeight: 'calc(100vh - 280px)',
+          minHeight: '520px',
+          maxHeight: 'calc(100vh - 270px)',
           paddingRight: '6px',
-          paddingBottom: '140px',
+          paddingBottom: '16px',
         }}
       >
         {rules.length === 0 ? (
@@ -94,6 +141,7 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
               border: '2px dashed var(--border-medium)',
               borderRadius: 'var(--radius-md)',
               background: 'var(--bg-input)',
+              margin: 'auto 0',
             }}
           >
             <div
@@ -139,6 +187,55 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
           ))
         )}
       </div>
+
+      {/* Clean Bottom Summary / Quick Add Footer */}
+      {rules.length > 0 && (
+        <div
+          style={{
+            marginTop: 'auto',
+            paddingTop: '12px',
+            borderTop: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <button
+            type="button"
+            onClick={onAddRule}
+            className="btn btn-secondary btn-sm"
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              border: '1px dashed var(--border-medium)',
+              background: 'rgba(2, 132, 199, 0.04)',
+              fontSize: '0.8rem',
+              padding: '7px 12px',
+            }}
+          >
+            <Plus size={14} />
+            <span>Thêm File con tiếp theo (#{rules.length + 1})</span>
+          </button>
+
+          {onOpenNamingSettings && (
+            <button
+              type="button"
+              onClick={onOpenNamingSettings}
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: '0.78rem', padding: '6px 10px', color: 'var(--text-muted)' }}
+              title="Đổi tên hàng loạt hoặc sửa mẫu tên mặc định"
+            >
+              <Sparkles size={13} style={{ marginRight: '4px', color: 'var(--accent-amber)' }} />
+              <span>Đổi tên ({rules.length})</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

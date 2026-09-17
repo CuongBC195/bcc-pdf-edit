@@ -10,7 +10,14 @@ import { VisualThumbnailGrid } from './components/VisualThumbnailGrid';
 import { SplitRuleList } from './components/SplitRuleList';
 import { BatchRenameModal } from './components/BatchRenameModal';
 import { ExportActionBar } from './components/ExportActionBar';
-import { parsePageRange, formatPagesToRange } from './utils/pageUtils';
+import {
+  parsePageRange,
+  formatPagesToRange,
+  evaluateNamingPattern,
+  getDefaultNamingPattern,
+  getDefaultNamingStart,
+  getDefaultNamingDigits,
+} from './utils/pageUtils';
 import { extractBookmarks, resetPdfDocumentCache } from './services/thumbnailService';
 import { executeMultiSplit } from './services/pdfService';
 import { downloadAsZip, saveDirectlyToDirectory } from './services/exportService';
@@ -48,6 +55,7 @@ export const App: React.FC = () => {
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [restoredNotification, setRestoredNotification] = useState<string | null>(null);
   const [isRecentModalOpen, setIsRecentModalOpen] = useState(false);
+  const [defaultNamingPattern, setDefaultNamingPatternState] = useState<string>(() => getDefaultNamingPattern());
 
   const [exportProgress, setExportProgress] = useState<ExportProgress>({
     status: 'idle',
@@ -362,6 +370,27 @@ export const App: React.FC = () => {
     setPageRotations({});
   }, []);
 
+  // Helper: generates name for a rule based on user's saved default pattern (e.g. A38-011-07-0123-{cs}-BC-0001-1998)
+  const generateNewRuleName = useCallback(
+    (zeroBasedIndex: number, suggestedPages: number[] = [1]) => {
+      const baseOriginal = pdfMeta ? pdfMeta.name.replace(/\.[^/.]+$/, '') : 'document';
+      if (defaultNamingPattern && defaultNamingPattern.trim()) {
+        return evaluateNamingPattern(defaultNamingPattern, zeroBasedIndex, {
+          startIndex: getDefaultNamingStart(),
+          defaultDigits: getDefaultNamingDigits(),
+          originalPdfName: baseOriginal,
+          rule: {
+            pages: suggestedPages,
+            pageRangeStr: formatPagesToRange(suggestedPages),
+          },
+        });
+      }
+      const idx = zeroBasedIndex + 1;
+      return `TepCon_${idx < 10 ? '0' + idx : idx}.pdf`;
+    },
+    [pdfMeta, defaultNamingPattern]
+  );
+
   // Create child rule from selected pages
   const handleCreateRuleFromSelected = () => {
     if (!pdfMeta || selectedPages.length === 0) return;
@@ -372,7 +401,7 @@ export const App: React.FC = () => {
 
     const newRule: SplitRule = {
       id: newRuleId,
-      name: `Part_${nextIdx < 10 ? '0' + nextIdx : nextIdx}.pdf`,
+      name: generateNewRuleName(rules.length, selectedPages),
       pageRangeStr: rangeStr,
       pages: [...selectedPages],
       color,
@@ -394,11 +423,10 @@ export const App: React.FC = () => {
       const pagesA = Array.from({ length: pageNum }, (_, i) => i + 1);
       const pagesB = Array.from({ length: pdfMeta.pageCount - pageNum }, (_, i) => pageNum + 1 + i);
 
-      const baseName = pdfMeta.name.replace(/\.[^/.]+$/, '');
       const newRules: SplitRule[] = [
         {
           id: `rule_${Date.now()}_1`,
-          name: `${baseName}_Part01.pdf`,
+          name: generateNewRuleName(0, pagesA),
           pageRangeStr: formatPagesToRange(pagesA),
           pages: pagesA,
           color: PRESET_COLORS[0],
@@ -406,7 +434,7 @@ export const App: React.FC = () => {
         },
         {
           id: `rule_${Date.now()}_2`,
-          name: `${baseName}_Part02.pdf`,
+          name: generateNewRuleName(1, pagesB),
           pageRangeStr: formatPagesToRange(pagesB),
           pages: pagesB,
           color: PRESET_COLORS[1],
@@ -466,7 +494,7 @@ export const App: React.FC = () => {
       const nextIdx = rules.length + 1;
       const newRule: SplitRule = {
         id: `rule_${Date.now()}`,
-        name: `Part_${nextIdx < 10 ? '0' + nextIdx : nextIdx}.pdf`,
+        name: generateNewRuleName(rules.length, pagesA),
         pageRangeStr: formatPagesToRange(pagesA),
         pages: pagesA,
         color: PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length],
@@ -493,7 +521,7 @@ export const App: React.FC = () => {
 
     const newRule: SplitRule = {
       id: `rule_${Date.now()}`,
-      name: `TepCon_${nextIdx < 10 ? '0' + nextIdx : nextIdx}.pdf`,
+      name: generateNewRuleName(rules.length, [suggestedPage]),
       pageRangeStr: `${suggestedPage}`,
       pages: [suggestedPage],
       color,
@@ -600,7 +628,7 @@ export const App: React.FC = () => {
 
       newRules.push({
         id: `rule_n_${idx}`,
-        name: `Part_${idx < 10 ? '0' + idx : idx}_Trang_${p}-${end}.pdf`,
+        name: generateNewRuleName(idx - 1, pageList),
         pageRangeStr: `${p}-${end}`,
         pages: pageList,
         color: PRESET_COLORS[(idx - 1) % PRESET_COLORS.length],
@@ -618,7 +646,7 @@ export const App: React.FC = () => {
     for (let p = 1; p <= pdfMeta.pageCount; p++) {
       newRules.push({
         id: `rule_single_${p}`,
-        name: `Trang_${p < 10 ? '0' + p : p}.pdf`,
+        name: generateNewRuleName(p - 1, [p]),
         pageRangeStr: `${p}`,
         pages: [p],
         color: PRESET_COLORS[(p - 1) % PRESET_COLORS.length],
@@ -628,27 +656,17 @@ export const App: React.FC = () => {
     setRules(newRules);
   };
 
-  const handleBatchRename = (pattern: string) => {
+  const handleBatchRename = (pattern: string, startFrom: number = 1, digits: number = 3) => {
     if (!pdfMeta) return;
-    const baseOriginal = pdfMeta.name.replace(/\.[^/.]+$/, '');
 
     setRules((prev) =>
       prev.map((r, i) => {
-        const idx1 = i + 1;
-        const idx02 = idx1 < 10 ? `0${idx1}` : `${idx1}`;
-        const range = r.pageRangeStr || `${r.pages[0] || 1}-${r.pages[r.pages.length - 1] || 1}`;
-
-        let newName = pattern
-          .replace(/\{index:02d\}/g, idx02)
-          .replace(/\{index\}/g, `${idx1}`)
-          .replace(/\{original\}/g, baseOriginal)
-          .replace(/\{range\}/g, range)
-          .replace(/\{pages\}/g, `${r.pages.length}`);
-
-        if (!newName.toLowerCase().endsWith('.pdf')) {
-          newName += '.pdf';
-        }
-
+        const newName = evaluateNamingPattern(pattern, i, {
+          startIndex: startFrom,
+          defaultDigits: digits,
+          originalPdfName: pdfMeta.name,
+          rule: r,
+        });
         return { ...r, name: newName };
       })
     );
@@ -938,15 +956,16 @@ export const App: React.FC = () => {
                 setActiveRuleId(null);
               }}
               ruleCount={rules.length}
+              defaultPattern={defaultNamingPattern}
             />
 
-            {/* 2-Column Split Pane Workspace */}
+            {/* 2-Column Split Pane Workspace - Stretched to equal height */}
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'minmax(0, 1.4fr) minmax(360px, 1fr)',
                 gap: '24px',
-                alignItems: 'start',
+                alignItems: 'stretch',
               }}
             >
               {/* Left: Visual Thumbnail Grid */}
@@ -984,6 +1003,8 @@ export const App: React.FC = () => {
                 onChangeColor={handleChangeRuleColor}
                 onDelete={handleDeleteRule}
                 onDuplicate={handleDuplicateRule}
+                defaultPattern={defaultNamingPattern}
+                onOpenNamingSettings={() => setIsBatchRenameOpen(true)}
               />
             </div>
 
@@ -994,6 +1015,7 @@ export const App: React.FC = () => {
               rules={rules}
               originalPdfName={pdfMeta.name}
               onApplyPattern={handleBatchRename}
+              onDefaultPatternChange={(p) => setDefaultNamingPatternState(p)}
             />
           </div>
         )}

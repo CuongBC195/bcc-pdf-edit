@@ -480,9 +480,11 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             }
           }}
           style={{
+            flex: 1,
             overflowY: 'auto',
-            maxHeight: 'calc(100vh - 280px)',
-            paddingBottom: '140px',
+            minHeight: '520px',
+            maxHeight: 'calc(100vh - 270px)',
+            paddingBottom: '24px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)',
             background: 'var(--bg-surface-elevated)',
@@ -539,6 +541,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             const isHovered = hoveredPage === pageNum;
             const isFocused = focusedPage === pageNum;
 
+            const primaryRule = assignedRules[0] || null;
             const isInActiveRule = activeRule ? activeRule.pages.includes(pageNum) : false;
 
             let rowBg = 'transparent';
@@ -581,15 +584,17 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   background: rowBg,
                   cursor: 'pointer',
                   userSelect: 'none',
-                  borderLeft: isSelected
-                    ? '3px solid var(--accent-cyan)'
-                    : activeRule && isInActiveRule
-                    ? `3px solid ${activeRule.color}`
+                  borderLeft: (activeRule && isInActiveRule)
+                    ? `4px solid ${activeRule.color}`
+                    : isSelected
+                    ? '4px solid var(--accent-cyan)'
+                    : primaryRule
+                    ? `4px solid ${primaryRule.color}`
                     : isHovered
-                    ? '3px solid var(--accent-cyan)'
+                    ? '4px solid var(--accent-cyan)'
                     : isFocused
-                    ? '3px solid var(--border-active)'
-                    : '3px solid transparent',
+                    ? '4px solid var(--border-active)'
+                    : '4px solid transparent',
                 }}
                 className="finder-list-row"
                 title={`Trang #${pageNum} — Trỏ chuột & phím Space để xem trước pop up, nhấp đúp để mở`}
@@ -646,41 +651,123 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   )}
                 </div>
 
-                {/* 4. Child Rule Assignment Status */}
+                {/* 4. Child Rule Assignment Status - Always preserves existing file colors */}
                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
                   {activeRule ? (
                     isInActiveRule ? (
-                      <span className="badge" style={{ background: `${activeRule.color}25`, color: activeRule.color, border: `1px solid ${activeRule.color}55`, fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-                        <span>Thuộc file này (bấm bỏ)</span>
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span
+                          className="badge"
+                          style={{
+                            background: `${activeRule.color}25`,
+                            color: activeRule.color,
+                            border: `1.5px solid ${activeRule.color}`,
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            boxShadow: `0 0 8px ${activeRule.color}35`,
+                          }}
+                        >
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                          <span>Thuộc file này (Bấm bỏ)</span>
+                        </span>
+                        {assignedRules
+                          .filter((r) => r.id !== activeRule.id)
+                          .map((rule) => {
+                            const rIdx = rules.findIndex((r) => r.id === rule.id);
+                            return (
+                              <span
+                                key={rule.id}
+                                className="badge"
+                                style={{
+                                  background: `${rule.color}15`,
+                                  color: rule.color,
+                                  border: `1px solid ${rule.color}45`,
+                                  fontSize: '0.72rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                                <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
+                              </span>
+                            );
+                          })}
+                      </div>
+                    ) : assignedRules.length > 0 ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        {assignedRules.map((rule) => {
+                          const rIdx = rules.findIndex((r) => r.id === rule.id);
+                          return (
+                            <span
+                              key={rule.id}
+                              className="badge"
+                              style={{
+                                background: `${rule.color}20`,
+                                color: rule.color,
+                                border: `1.5px solid ${rule.color}65`,
+                                fontSize: '0.74rem',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                              }}
+                            >
+                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                              <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
+                            </span>
+                          );
+                        })}
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            color: 'var(--text-muted)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            background: 'var(--bg-surface)',
+                            border: '1px dashed var(--border-medium)',
+                          }}
+                        >
+                          <Plus size={11} style={{ color: activeRule.color }} />
+                          <span>(Thêm vào file này)</span>
+                        </span>
+                      </div>
                     ) : (
                       <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <Plus size={11} />
-                        <span>Bấm để thêm vào file</span>
+                        <Plus size={11} style={{ color: activeRule.color }} />
+                        <span>Chưa gán • Bấm để thêm vào file này</span>
                       </span>
                     )
                   ) : assignedRules.length > 0 ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      {assignedRules.map((rule) => (
-                        <span
-                          key={rule.id}
-                          className="badge"
-                          style={{
-                            background: `${rule.color}20`,
-                            color: rule.color,
-                            border: `1px solid ${rule.color}50`,
-                            fontSize: '0.74rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                          }}
-                        >
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-                          <span>{rule.name.split('/').pop()}</span>
-                        </span>
-                      ))}
+                      {assignedRules.map((rule) => {
+                        const rIdx = rules.findIndex((r) => r.id === rule.id);
+                        return (
+                          <span
+                            key={rule.id}
+                            className="badge"
+                            style={{
+                              background: `${rule.color}20`,
+                              color: rule.color,
+                              border: `1.5px solid ${rule.color}55`,
+                              fontSize: '0.74rem',
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                            }}
+                          >
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                            <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
+                          </span>
+                        );
+                      })}
                     </div>
                   ) : (
                     <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
@@ -774,37 +861,45 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             }
           }}
           style={{
+            flex: 1,
+            overflowY: 'auto',
+            minHeight: '520px',
+            maxHeight: 'calc(100vh - 270px)',
+            paddingRight: '6px',
+            paddingBottom: '24px',
             display: 'grid',
             gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
             gap: '16px',
-            overflowY: 'auto',
-            maxHeight: 'calc(100vh - 280px)',
-            paddingRight: '6px',
-            paddingBottom: '140px',
           }}
         >
           {filteredPages.map((pageNum) => {
             const isSelected = selectedPages.includes(pageNum);
             const assignedRules = pageRuleMap.get(pageNum) || [];
             const primaryRule = assignedRules[0];
+            const primaryRuleIdx = primaryRule ? rules.findIndex((r) => r.id === primaryRule.id) : -1;
             const thumb = thumbnails[pageNum];
             const rotation = pageRotations[pageNum] || 0;
+            const isHovered = hoveredRule ? hoveredRule.pages.includes(pageNum) : false;
             const isFocused = focusedPage === pageNum;
 
             // Two-way active rule binding check
             const isInActiveRule = activeRule ? activeRule.pages.includes(pageNum) : false;
-            const isHovered = hoveredRule ? hoveredRule.pages.includes(pageNum) : false;
 
-            // Compute dynamic card border and shadow
+            // Compute dynamic card border and shadow - Always preserves primary rule color!
             let cardBorder = '1px solid var(--border-subtle)';
             let cardShadow = 'none';
             let cardOpacity = 1;
 
             if (activeRule) {
               if (isInActiveRule) {
-                cardBorder = `2px solid ${activeRule.color}`;
+                cardBorder = `2.5px solid ${activeRule.color}`;
                 cardShadow = `0 0 16px ${activeRule.color}55`;
                 cardOpacity = 1;
+              } else if (primaryRule) {
+                // Preserve colors of File 1, File 2 when File 3 is active!
+                cardBorder = `2px solid ${primaryRule.color}bb`;
+                cardShadow = `0 0 10px ${primaryRule.color}30`;
+                cardOpacity = 0.95;
               } else {
                 cardBorder = '1px solid var(--border-medium)';
                 cardShadow = 'none';
@@ -912,8 +1007,8 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                       </span>
                     )}
 
-                    {/* Primary Rule Tag */}
-                    {!activeRule && !isSelected && primaryRule && (
+                    {/* Primary Rule Tag - Always shown even when another file is active */}
+                    {primaryRule && !isInActiveRule && (
                       <span
                         style={{
                           background: primaryRule.color,
@@ -922,13 +1017,15 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                           padding: '1px 6px',
                           fontSize: '0.65rem',
                           fontWeight: 700,
-                          maxWidth: '85px',
+                          maxWidth: '90px',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
+                          boxShadow: `0 1px 4px ${primaryRule.color}40`,
                         }}
+                        title={`Trang này thuộc File ${primaryRuleIdx + 1}: ${primaryRule.name}`}
                       >
-                        {primaryRule.name.split('/').pop()}
+                        File {primaryRuleIdx + 1}
                       </span>
                     )}
 
@@ -1019,16 +1116,21 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
                           <span>Thuộc file này (bấm bỏ)</span>
                         </span>
+                      ) : primaryRule ? (
+                        <span style={{ color: primaryRule.color, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                          <span>File {primaryRuleIdx + 1} (+ Thêm)</span>
+                        </span>
                       ) : (
                         <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                          <Plus size={11} />
+                          <Plus size={11} style={{ color: activeRule.color }} />
                           <span>Bấm thêm vào file</span>
                         </span>
                       )
                     ) : assignedRules.length > 0 ? (
                       <span style={{ color: primaryRule.color, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-                        <span>{primaryRule.name.split('/').pop()}</span>
+                        <span>File {primaryRuleIdx + 1}: {primaryRule.name.split('/').pop()}</span>
                       </span>
                     ) : (
                       <span>Chưa gán</span>

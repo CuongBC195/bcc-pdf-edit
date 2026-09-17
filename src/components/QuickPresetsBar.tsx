@@ -11,6 +11,7 @@ interface QuickPresetsBarProps {
   onOpenBatchRename: () => void;
   onClearRules: () => void;
   ruleCount: number;
+  defaultPattern?: string;
 }
 
 export const QuickPresetsBar: React.FC<QuickPresetsBarProps> = ({
@@ -22,6 +23,7 @@ export const QuickPresetsBar: React.FC<QuickPresetsBarProps> = ({
   onOpenBatchRename,
   onClearRules,
   ruleCount,
+  defaultPattern,
 }) => {
   const [customN, setCustomN] = useState<number>(2);
   const [showNPrompt, setShowNPrompt] = useState(false);
@@ -124,30 +126,36 @@ export const QuickPresetsBar: React.FC<QuickPresetsBarProps> = ({
         </button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {ruleCount > 0 && (
-          <>
-            <button
-              type="button"
-              onClick={onOpenBatchRename}
-              className="btn btn-secondary btn-sm"
-              title="Đổi tên hàng loạt theo công thức (tên file, số thứ tự, trang...)"
-            >
-              <Edit3 size={14} />
-              <span>Đổi tên hàng loạt</span>
-            </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={onOpenBatchRename}
+          className="btn btn-secondary btn-sm"
+          style={{
+            borderColor: defaultPattern ? 'rgba(245, 158, 11, 0.4)' : undefined,
+            background: defaultPattern ? 'rgba(245, 158, 11, 0.08)' : undefined,
+          }}
+          title="Thiết lập mẫu đặt tên file tự động theo chuẩn lưu trữ ({cs})"
+        >
+          <Edit3 size={14} style={{ color: defaultPattern ? 'var(--accent-amber)' : 'inherit' }} />
+          <span>
+            {defaultPattern
+              ? `Mẫu: ${defaultPattern.length > 22 ? defaultPattern.slice(0, 22) + '...' : defaultPattern}`
+              : 'Cài đặt mẫu tên file ({cs})'}
+          </span>
+        </button>
 
-            <button
-              type="button"
-              onClick={onClearRules}
-              className="btn btn-ghost btn-sm"
-              style={{ color: 'var(--accent-rose)' }}
-              title="Xóa hết danh sách quy tắc đang có"
-            >
-              <Trash2 size={14} />
-              <span>Xóa hết</span>
-            </button>
-          </>
+        {ruleCount > 0 && (
+          <button
+            type="button"
+            onClick={onClearRules}
+            className="btn btn-ghost btn-sm"
+            style={{ color: 'var(--accent-rose)' }}
+            title="Xóa hết danh sách quy tắc đang có"
+          >
+            <Trash2 size={14} />
+            <span>Xóa hết</span>
+          </button>
         )}
       </div>
     </div>

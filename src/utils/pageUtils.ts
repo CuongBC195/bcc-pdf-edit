@@ -106,3 +106,118 @@ export function sanitizeRelativePath(inputPath: string, defaultName: string = 'd
 
   return segments.join('/');
 }
+
+export const DEFAULT_PATTERN_STORAGE_KEY = 'bccpdf_default_naming_pattern';
+export const DEFAULT_START_STORAGE_KEY = 'bccpdf_default_naming_start';
+export const DEFAULT_DIGITS_STORAGE_KEY = 'bccpdf_default_naming_digits';
+
+export interface NamingPatternOptions {
+  startIndex?: number; // default: 1
+  defaultDigits?: number; // default: 3 (e.g. 001 for {cs})
+  originalPdfName?: string;
+  rule?: {
+    pageRangeStr?: string;
+    pages?: number[];
+  };
+}
+
+/**
+ * Evaluates a naming template string with placeholders:
+ * - {cs} or {stt}: Padded counter (default 3 digits e.g. 001, 002... according to VN Archival Standard)
+ * - {cs:N} or {stt:N}: Padded counter to N digits (e.g. {cs:4} -> 0001, {cs:2} -> 01)
+ * - {index}: Raw counter without leading zeroes (1, 2, 3...)
+ * - {index:02d} / {index:03d} / {index:04d}: Python-style format
+ * - {original}: Original PDF file name (without extension)
+ * - {range}: Page range string (e.g. "1-5" or "1, 3, 5-8")
+ * - {pages}: Total number of pages in this rule
+ */
+export function evaluateNamingPattern(
+  template: string,
+  zeroBasedIndex: number,
+  options?: NamingPatternOptions
+): string {
+  if (!template || !template.trim()) {
+    const idx = (options?.startIndex ?? 1) + zeroBasedIndex;
+    return `TepCon_${idx < 10 ? '0' + idx : idx}.pdf`;
+  }
+
+  const start = options?.startIndex ?? 1;
+  const currentNum = start + zeroBasedIndex;
+  const defaultDigits = options?.defaultDigits ?? 3;
+
+  const baseOriginal = (options?.originalPdfName || 'document').replace(/\.[^/.]+$/, '');
+  const range = options?.rule?.pageRangeStr || (options?.rule?.pages ? formatPagesToRange(options.rule.pages) : '1');
+  const pagesCount = `${options?.rule?.pages?.length ?? 1}`;
+
+  let result = template;
+
+  // Replace {cs:N} or {stt:N} with custom padding N
+  result = result.replace(/\{(?:cs|stt):(\d+)\}/gi, (_, digits) => {
+    const pad = parseInt(digits, 10) || defaultDigits;
+    return String(currentNum).padStart(pad, '0');
+  });
+
+  // Replace {cs} or {stt} with default digits (3 digits by default: 001, 002...)
+  result = result.replace(/\{(?:cs|stt)\}/gi, () => {
+    return String(currentNum).padStart(defaultDigits, '0');
+  });
+
+  // Replace {index:0?(\d+)d} or {index:(\d+)}
+  result = result.replace(/\{index:0?(\d+)d?\}/gi, (_, digits) => {
+    const pad = parseInt(digits, 10) || 2;
+    return String(currentNum).padStart(pad, '0');
+  });
+
+  // Replace raw {index}
+  result = result.replace(/\{index\}/gi, `${currentNum}`);
+
+  // Replace {original}
+  result = result.replace(/\{original\}/gi, baseOriginal);
+
+  // Replace {range}
+  result = result.replace(/\{range\}/gi, range);
+
+  // Replace {pages}
+  result = result.replace(/\{pages\}/gi, pagesCount);
+
+  // Clean and ensure .pdf extension
+  let sanitized = result.trim().replace(/\\/g, '/');
+  if (!sanitized.toLowerCase().endsWith('.pdf')) {
+    sanitized += '.pdf';
+  }
+
+  return sanitized;
+}
+
+export function getDefaultNamingPattern(): string {
+  return localStorage.getItem(DEFAULT_PATTERN_STORAGE_KEY) || '';
+}
+
+export function setDefaultNamingPattern(pattern: string): void {
+  if (pattern && pattern.trim()) {
+    localStorage.setItem(DEFAULT_PATTERN_STORAGE_KEY, pattern.trim());
+  } else {
+    localStorage.removeItem(DEFAULT_PATTERN_STORAGE_KEY);
+  }
+}
+
+export function getDefaultNamingStart(): number {
+  const saved = localStorage.getItem(DEFAULT_START_STORAGE_KEY);
+  const num = parseInt(saved || '1', 10);
+  return isNaN(num) || num < 1 ? 1 : num;
+}
+
+export function setDefaultNamingStart(start: number): void {
+  localStorage.setItem(DEFAULT_START_STORAGE_KEY, String(Math.max(1, start)));
+}
+
+export function getDefaultNamingDigits(): number {
+  const saved = localStorage.getItem(DEFAULT_DIGITS_STORAGE_KEY);
+  const num = parseInt(saved || '3', 10);
+  return isNaN(num) || num < 1 ? 3 : num;
+}
+
+export function setDefaultNamingDigits(digits: number): void {
+  localStorage.setItem(DEFAULT_DIGITS_STORAGE_KEY, String(Math.max(1, Math.min(6, digits))));
+}
+
