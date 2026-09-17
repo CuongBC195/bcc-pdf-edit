@@ -122,13 +122,12 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
         </button>
       </div>
 
-      {/* Rules Scrollable Container - Perfectly matches left panel height */}
+      {/* Rules Scrollable Container - Fills available height naturally without artificial maxHeight cut-off */}
       <div
         style={{
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
-          minHeight: '520px',
-          maxHeight: 'calc(100vh - 270px)',
           paddingRight: '6px',
           paddingBottom: '16px',
         }}
@@ -169,73 +168,49 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
             </button>
           </div>
         ) : (
-          rules.map((rule, idx) => (
-            <SplitRuleCard
-              key={rule.id}
-              rule={rule}
-              index={idx}
-              totalSourcePages={totalSourcePages}
-              isActive={rule.id === activeRuleId}
-              onSelectRule={onSelectRule}
-              onHoverRule={onHoverRule}
-              onChangeName={onChangeName}
-              onChangeRange={onChangeRange}
-              onChangeColor={onChangeColor}
-              onDelete={onDelete}
-              onDuplicate={onDuplicate}
-            />
-          ))
-        )}
-      </div>
+          <>
+            {rules.map((rule, idx) => (
+              <SplitRuleCard
+                key={rule.id}
+                rule={rule}
+                index={idx}
+                totalSourcePages={totalSourcePages}
+                isActive={rule.id === activeRuleId}
+                onSelectRule={onSelectRule}
+                onHoverRule={onHoverRule}
+                onChangeName={onChangeName}
+                onChangeRange={onChangeRange}
+                onChangeColor={onChangeColor}
+                onDelete={onDelete}
+                onDuplicate={onDuplicate}
+              />
+            ))}
 
-      {/* Clean Bottom Summary / Quick Add Footer */}
-      {rules.length > 0 && (
-        <div
-          style={{
-            marginTop: 'auto',
-            paddingTop: '12px',
-            borderTop: '1px solid var(--border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '10px',
-            flexWrap: 'wrap',
-          }}
-        >
-          <button
-            type="button"
-            onClick={onAddRule}
-            className="btn btn-secondary btn-sm"
-            style={{
-              flex: 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              border: '1px dashed var(--border-medium)',
-              background: 'rgba(2, 132, 199, 0.04)',
-              fontSize: '0.8rem',
-              padding: '7px 12px',
-            }}
-          >
-            <Plus size={14} />
-            <span>Thêm File con tiếp theo (#{rules.length + 1})</span>
-          </button>
-
-          {onOpenNamingSettings && (
+            {/* Next rule dashed button directly follows the cards without awkward empty gap */}
             <button
               type="button"
-              onClick={onOpenNamingSettings}
-              className="btn btn-ghost btn-sm"
-              style={{ fontSize: '0.78rem', padding: '6px 10px', color: 'var(--text-muted)' }}
-              title="Đổi tên hàng loạt hoặc sửa mẫu tên mặc định"
+              onClick={onAddRule}
+              className="btn btn-secondary btn-sm"
+              style={{
+                width: '100%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                border: '1.5px dashed var(--border-medium)',
+                background: 'rgba(2, 132, 199, 0.04)',
+                fontSize: '0.82rem',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                marginBottom: '8px',
+              }}
             >
-              <Sparkles size={13} style={{ marginRight: '4px', color: 'var(--accent-amber)' }} />
-              <span>Đổi tên ({rules.length})</span>
+              <Plus size={15} />
+              <span>+ Thêm File con tiếp theo (#{rules.length + 1})</span>
             </button>
-          )}
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
