@@ -23,7 +23,7 @@ import {
 } from './utils/pageUtils';
 import { extractBookmarks, resetPdfDocumentCache } from './services/thumbnailService';
 import { executeMultiSplit } from './services/pdfService';
-import { downloadAsZip, saveDirectlyToDirectory } from './services/exportService';
+import { downloadAsZip } from './services/exportService';
 import {
   saveSessionToDb,
   loadSessionFromDb,
@@ -848,83 +848,20 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleSaveToDisk = async () => {
-    if (!validateRulesForExport() || !pdfMeta) return;
-
-    try {
-      setExportProgress({
-        status: 'preparing',
-        current: 0,
-        total: rules.length,
-        message: 'Vui lòng chọn thư mục lưu trên máy...',
-      });
-
-      const results = await executeMultiSplit(
-        pdfMeta.arrayBuffer,
-        rules,
-        pageRotations,
-        (curr, total, msg) => {
-          setExportProgress({
-            status: 'processing',
-            current: curr,
-            total,
-            message: msg,
-          });
-        }
-      );
-
-      setExportProgress({
-        status: 'saving',
-        current: 0,
-        total: results.length,
-        message: 'Đang ghi các tệp vào ổ đĩa...',
-      });
-
-      const res = await saveDirectlyToDirectory(results, (curr, total, msg) => {
-        setExportProgress({
-          status: 'saving',
-          current: curr,
-          total,
-          message: msg,
-        });
-      });
-
-      if (res.success) {
-        setExportProgress({
-          status: 'done',
-          current: 100,
-          total: 100,
-          message: 'Tuyệt vời! Toàn bộ file và thư mục đã được lưu vào máy tính.',
-        });
-        setTimeout(() => {
-          setExportProgress((prev) => (prev.status === 'done' ? { ...prev, status: 'idle' } : prev));
-        }, 4000);
-      } else if (res.error) {
-        setDetailedAlert({
-          type: 'warning',
-          title: 'Không thể ghi tệp vào thư mục máy tính',
-          message: res.error,
-          details: [
-            'Bạn có thể đã bấm Hủy khi hộp thoại cấp quyền ghi thư mục hiển thị.',
-            'Nếu trình duyệt không hỗ trợ File System Access API, bạn hãy sử dụng tính năng "Tải file .ZIP" để tải về trọn vẹn.',
-          ],
-        });
-        setExportProgress({ status: 'idle', current: 0, total: 0, message: '' });
-      }
-    } catch (err: any) {
-      console.error('Save to disk error:', err);
-      setDetailedAlert({
-        type: 'error',
-        title: 'Lỗi khi ghi tệp vào máy tính',
-        message: 'Đã xảy ra sự cố khi ghi tệp trực tiếp vào ổ đĩa.',
-        details: [
-          `Thông báo kỹ thuật: ${err?.message || 'Lỗi quyền truy cập thư mục'}`,
-          'Hãy thử chọn một thư mục khác (như Downloads/Tải về hoặc Desktop/Màn hình chính).',
-          'Hoặc sử dụng nút "Tải file .ZIP" để tải về ngay lập tức.',
-        ],
-      });
-      setExportProgress({ status: 'idle', current: 0, total: 0, message: '' });
-    }
+  // Manual Save Draft handler
+  const handleSaveDraft = async () => {
+    if (!pdfMeta) return;
+    const windowScroll = window.scrollY || document.documentElement.scrollTop || 0;
+    await saveSessionToDb(
+      pdfMeta,
+      rules,
+      activeRuleId,
+      pageRotations,
+      selectedPages,
+      windowScroll,
+      gridScrollTop
+    );
+    await refreshRecentFiles();
   };
 
   const validRules = rules.filter((r) => r.isValid && r.pages.length > 0);
@@ -1133,7 +1070,7 @@ export const App: React.FC = () => {
           unassignedPagesCount={unassignedPagesCount}
           hasErrors={hasErrors}
           onExportZip={handleExportZip}
-          onSaveToDisk={handleSaveToDisk}
+          onSaveDraft={handleSaveDraft}
           exportProgress={exportProgress}
           defaultZipName={`${pdfMeta.name.replace(/\.[^/.]+$/, '')}_Splitted.zip`}
         />

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Archive, HardDrive, CheckCircle2, AlertTriangle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Archive, Save, Check, CheckCircle2, AlertTriangle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ExportProgress } from '../types/pdf';
-import { isDirectoryPickerSupported } from '../services/exportService';
 
 interface ExportActionBarProps {
   validRuleCount: number;
@@ -9,7 +8,7 @@ interface ExportActionBarProps {
   unassignedPagesCount: number;
   hasErrors: boolean;
   onExportZip: (zipName: string) => void;
-  onSaveToDisk: () => void;
+  onSaveDraft?: () => void | Promise<void>;
   exportProgress: ExportProgress;
   defaultZipName: string;
 }
@@ -20,14 +19,14 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
   unassignedPagesCount,
   hasErrors,
   onExportZip,
-  onSaveToDisk,
+  onSaveDraft,
   exportProgress,
   defaultZipName,
 }) => {
   const [zipName, setZipName] = useState(defaultZipName);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const isBusy = exportProgress.status !== 'idle' && exportProgress.status !== 'done' && exportProgress.status !== 'error';
-  const hasDirectoryApi = isDirectoryPickerSupported();
 
   useEffect(() => {
     setZipName(defaultZipName);
@@ -192,29 +191,45 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
             />
           </div>
 
-          {/* Action 1: Download as ZIP */}
+          {/* Action 1: Save Draft Button */}
+          {onSaveDraft && (
+            <button
+              type="button"
+              onClick={async () => {
+                await onSaveDraft();
+                setDraftSaved(true);
+                setTimeout(() => setDraftSaved(false), 2200);
+              }}
+              disabled={isBusy}
+              className="btn btn-secondary btn-sm"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '0.82rem',
+                color: draftSaved ? 'var(--accent-emerald)' : 'var(--text-main)',
+                borderColor: draftSaved ? 'var(--accent-emerald)' : undefined,
+                transition: 'all 0.2s ease',
+              }}
+              title="Lưu nháp phiên làm việc hiện tại vào bộ nhớ trình duyệt để tiếp tục sau"
+            >
+              {draftSaved ? <Check size={15} style={{ color: 'var(--accent-emerald)' }} /> : <Save size={15} />}
+              <span>{draftSaved ? 'Đã lưu nháp' : 'Lưu nháp'}</span>
+            </button>
+          )}
+
+          {/* Action 2: Download as ZIP */}
           <button
             type="button"
             onClick={() => onExportZip(zipName)}
             disabled={isBusy || validRuleCount === 0}
             className="btn btn-primary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px', fontWeight: 700 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 18px', fontWeight: 700 }}
+            title="Đóng gói và tải về tất cả các file con dưới dạng tệp nén .ZIP"
           >
             <Archive size={16} />
             <span>Tải file .ZIP</span>
-          </button>
-
-          {/* Action 2: Direct Directory Save */}
-          <button
-            type="button"
-            onClick={onSaveToDisk}
-            disabled={isBusy || validRuleCount === 0}
-            className="btn btn-success btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px', fontWeight: 700 }}
-            title={hasDirectoryApi ? 'Ghi trực tiếp các file và thư mục con vào ổ đĩa máy tính' : 'Tính năng khả dụng trên Chrome, Edge, Cốc Cốc'}
-          >
-            <HardDrive size={16} />
-            <span>Lưu thẳng vào Ổ đĩa</span>
           </button>
 
           {/* Collapse Button */}
