@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { UploadCloud, FileText, CheckCircle2, RefreshCw, FolderOpen } from 'lucide-react';
 import type { PDFMetadata } from '../types/pdf';
 import { loadPdfMetadata } from '../services/pdfService';
+import type { DetailedAlertData } from './DetailedAlertModal';
 
 interface FileUploaderProps {
   pdfMeta: PDFMetadata | null;
@@ -11,6 +12,7 @@ interface FileUploaderProps {
   isCompactMode?: boolean;
   recentCount?: number;
   onOpenRecentModal?: () => void;
+  onError?: (alert: DetailedAlertData) => void;
 }
 
 export const FileUploader: React.FC<FileUploaderProps> = ({
@@ -21,6 +23,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   isCompactMode = false,
   recentCount,
   onOpenRecentModal,
+  onError,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -33,14 +36,39 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
   const handleFile = async (file: File) => {
     if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Vui lòng chọn tệp định dạng PDF (.pdf)');
+      if (onError) {
+        onError({
+          type: 'warning',
+          title: 'Định dạng tệp không được hỗ trợ',
+          message: `Tệp "${file?.name || 'Đã chọn'}" không phải là định dạng PDF (.pdf).`,
+          details: [
+            'Hệ thống hiện tại chỉ hỗ trợ xử lý và cắt các tài liệu có đuôi tệp .pdf.',
+            'Vui lòng chọn tệp có định dạng .pdf chuẩn để tiếp tục.',
+          ],
+        });
+      } else {
+        alert('Vui lòng chọn tệp định dạng PDF (.pdf)');
+      }
       return;
     }
     try {
       const meta = await loadPdfMetadata(file);
       onFileLoaded(meta);
     } catch (err: any) {
-      alert('Không thể đọc tệp PDF này. ' + (err.message || ''));
+      if (onError) {
+        onError({
+          type: 'error',
+          title: 'Lỗi không thể mở tệp PDF',
+          message: `Không thể đọc cấu trúc tệp "${file.name}".`,
+          details: [
+            `Chi tiết lỗi: ${err.message || 'Cấu trúc file PDF bị hỏng hoặc tệp rỗng.'}`,
+            'Tệp có thể bị lỗi trong quá trình tải về hoặc có mật khẩu bảo vệ.',
+            'Gợi ý: Hãy mở tệp bằng Google Chrome hoặc Adobe Acrobat, chọn "In" -> "Lưu dưới dạng PDF" (Print to PDF) để tạo bản PDF sạch mới rồi thử lại.',
+          ],
+        });
+      } else {
+        alert('Không thể đọc tệp PDF này. ' + (err.message || ''));
+      }
     }
   };
 

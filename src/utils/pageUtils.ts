@@ -4,7 +4,7 @@
 export function parsePageRange(rangeStr: string, maxPages: number): { pages: number[]; isValid: boolean; error?: string } {
   const trimmed = rangeStr.trim();
   if (!trimmed) {
-    return { pages: [], isValid: false, error: 'Chưa nhập dải trang' };
+    return { pages: [], isValid: false, error: 'Chưa nhập số trang (Ví dụ: 1-5 hoặc 1, 3, 7)' };
   }
 
   const parts = trimmed.split(/[,;\s]+/).filter(Boolean);
@@ -12,18 +12,25 @@ export function parsePageRange(rangeStr: string, maxPages: number): { pages: num
 
   for (const part of parts) {
     if (part.includes('-')) {
-      const [startStr, endStr] = part.split('-');
+      const sub = part.split('-');
+      if (sub.length !== 2) {
+        return { pages: [], isValid: false, error: `Dải trang "${part}" sai cú pháp. Cần nhập dạng số "từ-đến" (ví dụ: 1-5)` };
+      }
+      const [startStr, endStr] = sub;
       const start = parseInt(startStr, 10);
       const end = parseInt(endStr, 10);
 
       if (isNaN(start) || isNaN(end)) {
-        return { pages: [], isValid: false, error: `Dải trang không hợp lệ: "${part}"` };
+        return { pages: [], isValid: false, error: `Dải trang "${part}" chứa ký tự không hợp lệ. Vui lòng chỉ nhập số (ví dụ: 1-5)` };
+      }
+      if (start < 1) {
+        return { pages: [], isValid: false, error: `Trang bắt đầu phải từ trang 1 trở lên (tài liệu không có trang ${start})` };
       }
       if (start > end) {
-        return { pages: [], isValid: false, error: `Trang bắt đầu lớn hơn trang kết thúc: "${part}"` };
+        return { pages: [], isValid: false, error: `Dải trang ngược: "${part}". Số trang bắt đầu (${start}) phải nhỏ hơn hoặc bằng trang kết thúc (${end})` };
       }
-      if (start < 1 || end > maxPages) {
-        return { pages: [], isValid: false, error: `Trang nằm ngoài phạm vi 1-${maxPages}: "${part}"` };
+      if (end > maxPages) {
+        return { pages: [], isValid: false, error: `Trang kết thúc (${end}) vượt quá tổng số ${maxPages} trang của tệp gốc` };
       }
 
       for (let i = start; i <= end; i++) {
@@ -32,10 +39,13 @@ export function parsePageRange(rangeStr: string, maxPages: number): { pages: num
     } else {
       const p = parseInt(part, 10);
       if (isNaN(p)) {
-        return { pages: [], isValid: false, error: `Số trang không hợp lệ: "${part}"` };
+        return { pages: [], isValid: false, error: `Ký tự "${part}" không phải là số trang hợp lệ. Vui lòng chỉ nhập số (ví dụ: 1, 3, 5-8)` };
       }
-      if (p < 1 || p > maxPages) {
-        return { pages: [], isValid: false, error: `Trang ${p} nằm ngoài phạm vi 1-${maxPages}` };
+      if (p < 1) {
+        return { pages: [], isValid: false, error: `Số trang phải từ trang 1 trở lên (không có trang ${p})` };
+      }
+      if (p > maxPages) {
+        return { pages: [], isValid: false, error: `Trang ${p} không tồn tại trong tệp PDF gốc (Tệp gốc chỉ có ${maxPages} trang)` };
       }
       pageSet.add(p);
     }
@@ -43,7 +53,7 @@ export function parsePageRange(rangeStr: string, maxPages: number): { pages: num
 
   const pages = Array.from(pageSet).sort((a, b) => a - b);
   if (pages.length === 0) {
-    return { pages: [], isValid: false, error: 'Chưa có trang nào được chọn' };
+    return { pages: [], isValid: false, error: 'Chưa có trang hợp lệ nào được chọn cho file con này' };
   }
 
   return { pages, isValid: true };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FolderOpen, Clock, CheckCircle2, Zap } from 'lucide-react';
+import { FolderOpen, Clock, Zap } from 'lucide-react';
 import type { PDFMetadata, SplitRule, PDFBookmarkItem, ExportProgress } from './types/pdf';
 import { PRESET_COLORS } from './types/pdf';
 import { Header } from './components/Header';
@@ -35,6 +35,7 @@ import {
   type RecentFileSummary,
 } from './services/storageService';
 import { RecentFilesList } from './components/RecentFilesList';
+import { DetailedAlertModal, type DetailedAlertData } from './components/DetailedAlertModal';
 
 export const App: React.FC = () => {
   // Default to Light mode, but respect user's saved preference in localStorage
@@ -56,7 +57,7 @@ export const App: React.FC = () => {
   const [recentFiles, setRecentFiles] = useState<RecentFileSummary[]>([]);
   const [isBatchRenameOpen, setIsBatchRenameOpen] = useState(false);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
-  const [restoredNotification, setRestoredNotification] = useState<string | null>(null);
+  const [detailedAlert, setDetailedAlert] = useState<DetailedAlertData | null>(null);
   const [isRecentModalOpen, setIsRecentModalOpen] = useState(false);
   const [defaultNamingPattern, setDefaultNamingPatternState] = useState<string>(() => getDefaultNamingPattern());
 
@@ -113,10 +114,6 @@ export const App: React.FC = () => {
           extractBookmarks(session.pdfMeta.arrayBuffer).then((bms) => {
             if (!isCancelled) setBookmarks(bms);
           });
-
-          setRestoredNotification(
-            `Đã tự động khôi phục phiên làm việc: "${session.pdfMeta.name}" (${(session.rules || []).length} file con). Tải lại trang (F5) không bị mất file hay vị trí!`
-          );
 
           // Restore window scroll position smoothly
           if (session.windowScrollY && session.windowScrollY > 0) {
@@ -220,7 +217,6 @@ export const App: React.FC = () => {
     setLastClickedPage(null);
     setGridScrollTop(0);
     setInitialGridScrollTop(0);
-    setRestoredNotification(null);
     await refreshRecentFiles();
   };
 
@@ -246,20 +242,24 @@ export const App: React.FC = () => {
           setBookmarks(bms);
         });
 
-        setRestoredNotification(
-          `Đã mở lại tệp "${session.pdfMeta.name}" (${(session.rules || []).length} file con đã lưu).`
-        );
-        setTimeout(() => setRestoredNotification(null), 4000);
-
+        // Restore window scroll position smoothly
         if (session.windowScrollY && session.windowScrollY > 0) {
           setTimeout(() => {
             window.scrollTo({ top: session.windowScrollY, behavior: 'smooth' });
           }, 250);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error opening recent file:', err);
-      alert('Không thể mở tệp từ lịch sử.');
+      setDetailedAlert({
+        type: 'error',
+        title: 'Không thể mở tệp từ lịch sử',
+        message: 'Đã xảy ra lỗi khi đọc dữ liệu tệp PDF từ bộ nhớ lưu trữ trình duyệt (IndexedDB).',
+        details: [
+          `Chi tiết kỹ thuật: ${err?.message || 'Dữ liệu phiên làm việc không hợp lệ hoặc đã bị dọn dẹp.'}`,
+          'Gợi ý: Hãy tải lại tệp PDF gốc từ máy tính của bạn.',
+        ],
+      });
     } finally {
       setIsLoadingPdf(false);
       refreshRecentFiles();
@@ -289,7 +289,6 @@ export const App: React.FC = () => {
         setLastClickedPage(null);
         setGridScrollTop(0);
         setInitialGridScrollTop(0);
-        setRestoredNotification(null);
       }
     }
   };
@@ -710,9 +709,75 @@ export const App: React.FC = () => {
     );
   };
 
+  // Helper: Validates user rules before export and returns detailed actionable errors if any
+  const validateRulesForExport = (): boolean => {
+    if (!pdfMeta) return false;
+
+    // Check 1: Empty rules
+    if (rules.length === 0) {
+      setDetailedAlert({
+        type: 'warning',
+        title: 'Chưa có File con nào để xuất',
+        message: 'Danh sách cấu hình file con hiện đang trống. Hãy tạo ít nhất 1 file con trước khi xuất.',
+        details: [
+          'Bạn có thể chọn nhanh ở thanh Gợi ý nhanh: "Chia đều N trang" hoặc "Tách từng trang".',
+          'Hoặc nhấp chuột vào các trang trên hình ảnh rồi bấm "Tạo file từ các trang đã chọn".',
+        ],
+      });
+      return false;
+    }
+
+    // Check 2: Invalid syntax or empty page range
+    const invalidRules = rules.filter((r) => !r.isValid || r.pages.length === 0);
+    if (invalidRules.length > 0) {
+      const errorDetails = invalidRules.map((r) => {
+        const ruleIdx = rules.findIndex((orig) => orig.id === r.id) + 1;
+        return `File con #${ruleIdx} ("${r.name}"): ${r.errorMsg || 'Chưa nhập số trang nào để cắt'}`;
+      });
+
+      setDetailedAlert({
+        type: 'error',
+        title: 'Không thể xuất file: Phát hiện lỗi nhập liệu',
+        message: `Có ${invalidRules.length} file con chưa hợp lệ hoặc đang bị lỗi dải trang. Vui lòng kiểm tra lại:`,
+        details: errorDetails,
+      });
+      return false;
+    }
+
+    // Check 3: Check for duplicate output file names
+    const nameMap = new Map<string, number[]>();
+    rules.forEach((r, idx) => {
+      const normalized = r.name.trim().toLowerCase();
+      const list = nameMap.get(normalized) || [];
+      list.push(idx + 1);
+      nameMap.set(normalized, list);
+    });
+
+    const duplicateErrors: string[] = [];
+    nameMap.forEach((indices, name) => {
+      if (indices.length > 1) {
+        duplicateErrors.push(
+          `Tên tệp "${name}" bị trùng lặp ở File con #${indices.join(' và #')}. Xuất ra sẽ bị ghi đè lên nhau.`
+        );
+      }
+    });
+
+    if (duplicateErrors.length > 0) {
+      setDetailedAlert({
+        type: 'warning',
+        title: 'Cảnh báo: Trùng lặp tên tệp con',
+        message: 'Phát hiện các file con có cùng tên tệp. Bạn nên đổi tên hoặc dùng cấu hình ký hiệu {cs} để tự động đánh số phân biệt:',
+        details: duplicateErrors,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   // Export handlers
   const handleExportZip = async (zipName: string) => {
-    if (!pdfMeta || rules.length === 0) return;
+    if (!validateRulesForExport() || !pdfMeta) return;
 
     try {
       setExportProgress({
@@ -763,18 +828,28 @@ export const App: React.FC = () => {
         setExportProgress((prev) => (prev.status === 'done' ? { ...prev, status: 'idle' } : prev));
       }, 4000);
     } catch (err: any) {
-      alert('Lỗi khi xuất file: ' + err.message);
+      console.error('Export error:', err);
+      setDetailedAlert({
+        type: 'error',
+        title: 'Lỗi hệ thống khi xuất tệp ZIP',
+        message: 'Đã xảy ra sự cố trong quá trình trích xuất trang PDF hoặc nén tệp .ZIP.',
+        details: [
+          `Thông báo lỗi: ${err?.message || 'Lỗi không xác định'}`,
+          'Kiểm tra lại dung lượng bộ nhớ hoặc thử xuất số lượng file con ít hơn.',
+          'Nếu tệp PDF có mật khẩu hoặc thiết lập hạn chế quyền, hãy mở khóa tệp trước khi cắt.',
+        ],
+      });
       setExportProgress({
         status: 'error',
         current: 0,
         total: 0,
-        message: 'Thất bại: ' + err.message,
+        message: 'Thất bại: ' + (err?.message || 'Lỗi không xác định'),
       });
     }
   };
 
   const handleSaveToDisk = async () => {
-    if (!pdfMeta || rules.length === 0) return;
+    if (!validateRulesForExport() || !pdfMeta) return;
 
     try {
       setExportProgress({
@@ -825,11 +900,29 @@ export const App: React.FC = () => {
           setExportProgress((prev) => (prev.status === 'done' ? { ...prev, status: 'idle' } : prev));
         }, 4000);
       } else if (res.error) {
-        alert(res.error);
+        setDetailedAlert({
+          type: 'warning',
+          title: 'Không thể ghi tệp vào thư mục máy tính',
+          message: res.error,
+          details: [
+            'Bạn có thể đã bấm Hủy khi hộp thoại cấp quyền ghi thư mục hiển thị.',
+            'Nếu trình duyệt không hỗ trợ File System Access API, bạn hãy sử dụng tính năng "Tải file .ZIP" để tải về trọn vẹn.',
+          ],
+        });
         setExportProgress({ status: 'idle', current: 0, total: 0, message: '' });
       }
     } catch (err: any) {
-      alert('Lỗi khi ghi tệp: ' + err.message);
+      console.error('Save to disk error:', err);
+      setDetailedAlert({
+        type: 'error',
+        title: 'Lỗi khi ghi tệp vào máy tính',
+        message: 'Đã xảy ra sự cố khi ghi tệp trực tiếp vào ổ đĩa.',
+        details: [
+          `Thông báo kỹ thuật: ${err?.message || 'Lỗi quyền truy cập thư mục'}`,
+          'Hãy thử chọn một thư mục khác (như Downloads/Tải về hoặc Desktop/Màn hình chính).',
+          'Hoặc sử dụng nút "Tải file .ZIP" để tải về ngay lập tức.',
+        ],
+      });
       setExportProgress({ status: 'idle', current: 0, total: 0, message: '' });
     }
   };
@@ -849,35 +942,6 @@ export const App: React.FC = () => {
           recentCount={recentFiles.length}
           onOpenRecentModal={() => setIsRecentModalOpen(true)}
         />
-
-        {restoredNotification && (
-          <div
-            className="bento-card animate-fade-in"
-            style={{
-              padding: '10px 16px',
-              marginBottom: '16px',
-              background: 'rgba(2, 132, 199, 0.08)',
-              border: '1px solid var(--border-active)',
-              color: 'var(--text-main)',
-              fontSize: '0.84rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={16} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
-              <span>{restoredNotification}</span>
-            </div>
-            <button
-              className="btn btn-ghost btn-sm"
-              style={{ fontSize: '0.75rem', padding: '2px 8px' }}
-              onClick={() => setRestoredNotification(null)}
-            >
-              Đã hiểu
-            </button>
-          </div>
-        )}
 
         {/* When in Home screen (no active file opened) */}
         {!pdfMeta && (
@@ -964,6 +1028,7 @@ export const App: React.FC = () => {
               isCompactMode={false}
               recentCount={recentFiles.length}
               onOpenRecentModal={() => setIsRecentModalOpen(true)}
+              onError={setDetailedAlert}
             />
           </>
         )}
@@ -977,6 +1042,7 @@ export const App: React.FC = () => {
             isLoading={isLoadingPdf}
             recentCount={recentFiles.length}
             onOpenRecentModal={() => setIsRecentModalOpen(true)}
+            onError={setDetailedAlert}
           />
         )}
 
@@ -1125,6 +1191,12 @@ export const App: React.FC = () => {
           </div>,
           document.body
         )}
+
+      {/* Detailed System & Validation Alert Modal */}
+      <DetailedAlertModal
+        alert={detailedAlert}
+        onClose={() => setDetailedAlert(null)}
+      />
     </>
   );
 };
