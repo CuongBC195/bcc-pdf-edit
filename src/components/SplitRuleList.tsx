@@ -206,7 +206,7 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
               }}
             >
               <Plus size={15} />
-              <span>+ Thêm File con tiếp theo (#{rules.length + 1})</span>
+              <span>Thêm File con tiếp theo (#{rules.length + 1})</span>
             </button>
           </>
         )}
