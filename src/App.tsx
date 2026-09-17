@@ -15,8 +15,11 @@ import {
   formatPagesToRange,
   evaluateNamingPattern,
   getDefaultNamingPattern,
+  setDefaultNamingPattern,
   getDefaultNamingStart,
+  setDefaultNamingStart,
   getDefaultNamingDigits,
+  setDefaultNamingDigits,
 } from './utils/pageUtils';
 import { extractBookmarks, resetPdfDocumentCache } from './services/thumbnailService';
 import { executeMultiSplit } from './services/pdfService';
@@ -374,8 +377,13 @@ export const App: React.FC = () => {
   const generateNewRuleName = useCallback(
     (zeroBasedIndex: number, suggestedPages: number[] = [1]) => {
       const baseOriginal = pdfMeta ? pdfMeta.name.replace(/\.[^/.]+$/, '') : 'document';
-      if (defaultNamingPattern && defaultNamingPattern.trim()) {
-        return evaluateNamingPattern(defaultNamingPattern, zeroBasedIndex, {
+      const activePattern =
+        defaultNamingPattern ||
+        getDefaultNamingPattern() ||
+        '';
+
+      if (activePattern && activePattern.trim()) {
+        return evaluateNamingPattern(activePattern, zeroBasedIndex, {
           startIndex: getDefaultNamingStart(),
           defaultDigits: getDefaultNamingDigits(),
           originalPdfName: baseOriginal,
@@ -399,9 +407,17 @@ export const App: React.FC = () => {
     const nextIdx = rules.length + 1;
     const color = PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length];
 
+    let idxToUse = rules.length;
+    let candidateName = generateNewRuleName(idxToUse, selectedPages);
+    const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
+    while (existingNames.has(candidateName.toLowerCase())) {
+      idxToUse++;
+      candidateName = generateNewRuleName(idxToUse, selectedPages);
+    }
+
     const newRule: SplitRule = {
       id: newRuleId,
-      name: generateNewRuleName(rules.length, selectedPages),
+      name: candidateName,
       pageRangeStr: rangeStr,
       pages: [...selectedPages],
       color,
@@ -492,9 +508,17 @@ export const App: React.FC = () => {
 
     if (pagesA.length > 0) {
       const nextIdx = rules.length + 1;
+      let idxToUse = rules.length;
+      let candidateName = generateNewRuleName(idxToUse, pagesA);
+      const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
+      while (existingNames.has(candidateName.toLowerCase())) {
+        idxToUse++;
+        candidateName = generateNewRuleName(idxToUse, pagesA);
+      }
+
       const newRule: SplitRule = {
         id: `rule_${Date.now()}`,
-        name: generateNewRuleName(rules.length, pagesA),
+        name: candidateName,
         pageRangeStr: formatPagesToRange(pagesA),
         pages: pagesA,
         color: PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length],
@@ -519,9 +543,17 @@ export const App: React.FC = () => {
       }
     }
 
+    let idxToUse = rules.length;
+    let candidateName = generateNewRuleName(idxToUse, [suggestedPage]);
+    const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
+    while (existingNames.has(candidateName.toLowerCase())) {
+      idxToUse++;
+      candidateName = generateNewRuleName(idxToUse, [suggestedPage]);
+    }
+
     const newRule: SplitRule = {
       id: `rule_${Date.now()}`,
-      name: generateNewRuleName(rules.length, [suggestedPage]),
+      name: candidateName,
       pageRangeStr: `${suggestedPage}`,
       pages: [suggestedPage],
       color,
@@ -658,6 +690,12 @@ export const App: React.FC = () => {
 
   const handleBatchRename = (pattern: string, startFrom: number = 1, digits: number = 3) => {
     if (!pdfMeta) return;
+
+    // Immediately persist and sync default pattern across app state and storage
+    setDefaultNamingPattern(pattern);
+    setDefaultNamingStart(startFrom);
+    setDefaultNamingDigits(digits);
+    setDefaultNamingPatternState(pattern);
 
     setRules((prev) =>
       prev.map((r, i) => {

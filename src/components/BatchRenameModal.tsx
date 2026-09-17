@@ -39,10 +39,7 @@ export const BatchRenameModal: React.FC<BatchRenameModalProps> = ({
 
   const [startIndex, setStartIndex] = useState<number>(() => getDefaultNamingStart());
   const [digits, setDigits] = useState<number>(() => getDefaultNamingDigits());
-  const [isDefault, setIsDefault] = useState<boolean>(() => {
-    const currDefault = getDefaultNamingPattern();
-    return Boolean(currDefault);
-  });
+  const [isDefault, setIsDefault] = useState<boolean>(true);
 
   // Sync state when opening
   useEffect(() => {
@@ -50,8 +47,8 @@ export const BatchRenameModal: React.FC<BatchRenameModalProps> = ({
       const savedDefault = getDefaultNamingPattern();
       if (savedDefault) {
         setPattern(savedDefault);
-        setIsDefault(true);
       }
+      setIsDefault(true);
       setStartIndex(getDefaultNamingStart());
       setDigits(getDefaultNamingDigits());
     }
@@ -94,18 +91,20 @@ export const BatchRenameModal: React.FC<BatchRenameModalProps> = ({
     },
   ];
 
-  const handleApply = (saveAsDefault: boolean) => {
+  const handleApply = (saveAsDefault: boolean = true) => {
     const trimmed = pattern.trim();
     if (!trimmed) return;
 
+    // Always persist start index and digits
+    setDefaultNamingStart(startIndex);
+    setDefaultNamingDigits(digits);
+
     if (saveAsDefault) {
       setDefaultNamingPattern(trimmed);
-      setDefaultNamingStart(startIndex);
-      setDefaultNamingDigits(digits);
       if (onDefaultPatternChange) {
         onDefaultPatternChange(trimmed);
       }
-    } else if (isDefault && !saveAsDefault) {
+    } else {
       setDefaultNamingPattern('');
       if (onDefaultPatternChange) {
         onDefaultPatternChange('');
@@ -470,7 +469,7 @@ export const BatchRenameModal: React.FC<BatchRenameModalProps> = ({
 
           <button
             type="button"
-            onClick={() => handleApply(isDefault)}
+            onClick={() => handleApply(rules.length === 0 ? true : isDefault)}
             className="btn btn-primary btn-sm"
             style={{
               display: 'flex',

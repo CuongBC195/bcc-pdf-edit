@@ -190,14 +190,21 @@ export function evaluateNamingPattern(
 }
 
 export function getDefaultNamingPattern(): string {
-  return localStorage.getItem(DEFAULT_PATTERN_STORAGE_KEY) || '';
+  return (
+    localStorage.getItem(DEFAULT_PATTERN_STORAGE_KEY) ||
+    localStorage.getItem('bccpdf_naming_pattern') ||
+    ''
+  );
 }
 
 export function setDefaultNamingPattern(pattern: string): void {
-  if (pattern && pattern.trim()) {
-    localStorage.setItem(DEFAULT_PATTERN_STORAGE_KEY, pattern.trim());
+  const trimmed = (pattern || '').trim();
+  if (trimmed) {
+    localStorage.setItem(DEFAULT_PATTERN_STORAGE_KEY, trimmed);
+    localStorage.setItem('bccpdf_naming_pattern', trimmed);
   } else {
     localStorage.removeItem(DEFAULT_PATTERN_STORAGE_KEY);
+    localStorage.removeItem('bccpdf_naming_pattern');
   }
 }
 
