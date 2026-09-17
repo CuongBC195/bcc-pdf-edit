@@ -370,7 +370,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '36px 55px 55px minmax(140px, 1.4fr) 75px 165px',
+              gridTemplateColumns: '36px 55px 50px minmax(180px, 1fr) 70px 75px',
               gap: '10px',
               alignItems: 'center',
               padding: '8px 12px',
@@ -417,7 +417,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             <div>Bản xem</div>
             <div>Phân bổ File con</div>
             <div style={{ textAlign: 'center' }}>Góc xoay</div>
-            <div style={{ textAlign: 'right', paddingRight: '8px' }}>Thao tác / Cắt</div>
+            <div style={{ textAlign: 'center' }}>Thao tác</div>
           </div>
 
           {/* Finder Table Rows */}
@@ -477,7 +477,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   }}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '36px 55px 55px minmax(140px, 1.4fr) 75px 165px',
+                    gridTemplateColumns: '36px 55px 50px minmax(180px, 1fr) 70px 75px',
                     gap: '10px',
                     alignItems: 'center',
                     padding: '6px 12px',
@@ -695,8 +695,8 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   </button>
                 </div>
 
-                {/* 6. Action Tools (Space Preview + Split Here) */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                {/* 6. Action Tools (Icon-only: Quick Look + Cut Here) */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -706,24 +706,24 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                     }}
                     className="btn btn-ghost btn-sm"
                     style={{
-                      padding: '3px 7px',
-                      fontSize: '0.72rem',
+                      width: '28px',
+                      height: '26px',
+                      padding: 0,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '3px',
+                      justifyContent: 'center',
                       color: isHovered ? 'var(--accent-cyan)' : 'var(--text-dim)',
                       border: '1px solid var(--border-subtle)',
                       borderRadius: 'var(--radius-sm)',
                       background: 'var(--bg-card)',
                       transition: 'all 0.15s ease',
                     }}
-                    title="Xem trước pop up (Phím Space hoặc Nhấp đúp)"
+                    title="Xem trước pop-up [Phím Space hoặc Nhấp đúp]"
                   >
-                    <Eye size={12} />
-                    <span>Xem</span>
+                    <Eye size={13} />
                   </button>
 
-                  {pageNum < totalPageCount && (
+                  {pageNum < totalPageCount ? (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -732,25 +732,25 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                       }}
                       className="btn btn-secondary btn-sm"
                       style={{
-                        padding: '3px 9px',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
+                        width: '28px',
+                        height: '26px',
+                        padding: 0,
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px',
+                        justifyContent: 'center',
                         color: 'var(--accent-cyan)',
                         border: '1px solid rgba(6, 182, 212, 0.45)',
                         background: isHovered ? 'rgba(6, 182, 212, 0.2)' : 'rgba(6, 182, 212, 0.09)',
                         borderRadius: 'var(--radius-sm)',
-                        whiteSpace: 'nowrap',
                         boxShadow: isHovered ? '0 0 10px rgba(6, 182, 212, 0.25)' : 'none',
                         transition: 'all 0.15s ease',
                       }}
                       title={`Cắt tách thành file con mới sau trang #${pageNum}`}
                     >
-                      <Scissors size={12} />
-                      <span>Cắt tại đây</span>
+                      <Scissors size={13} />
                     </button>
+                  ) : (
+                    <div style={{ width: '28px' }} />
                   )}
                 </div>
               </div>
