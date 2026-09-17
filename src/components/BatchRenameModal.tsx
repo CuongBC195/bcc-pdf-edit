@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, ArrowRight, Star, Sparkles, Hash } from 'lucide-react';
 import type { SplitRule } from '../types/pdf';
 import {
@@ -120,7 +121,7 @@ export const BatchRenameModal: React.FC<BatchRenameModalProps> = ({
     setPattern((prev) => prev + tag);
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -131,7 +132,7 @@ export const BatchRenameModal: React.FC<BatchRenameModalProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000,
+        zIndex: 999999,
         padding: '20px',
         animation: 'fadeIn 0.2s ease',
       }}
@@ -489,6 +490,7 @@ export const BatchRenameModal: React.FC<BatchRenameModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -804,7 +804,7 @@ export const App: React.FC = () => {
 
   return (
     <>
-      <div className="app-container" style={{ paddingBottom: '90px' }}>
+      <div className="app-container" style={{ paddingBottom: validRules.length > 0 ? '90px' : '24px' }}>
         <Header
           theme={theme}
           onToggleTheme={toggleTheme}
@@ -1021,8 +1021,8 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      {/* Bottom Dock Action Bar - Placed outside container directly at viewport bottom */}
-      {pdfMeta && (
+      {/* Bottom Dock Action Bar - Only shows when there are actually valid files to export */}
+      {pdfMeta && (validRules.length > 0 || exportProgress.status !== 'idle') && (
         <ExportActionBar
           validRuleCount={validRules.length}
           totalAssignedPages={totalAssignedPages}

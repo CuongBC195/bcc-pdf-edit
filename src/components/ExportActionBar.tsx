@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Archive, HardDrive, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { Archive, HardDrive, CheckCircle2, AlertTriangle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ExportProgress } from '../types/pdf';
 import { isDirectoryPickerSupported } from '../services/exportService';
 
@@ -25,12 +25,56 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
   defaultZipName,
 }) => {
   const [zipName, setZipName] = useState(defaultZipName);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const isBusy = exportProgress.status !== 'idle' && exportProgress.status !== 'done' && exportProgress.status !== 'error';
   const hasDirectoryApi = isDirectoryPickerSupported();
 
   useEffect(() => {
     setZipName(defaultZipName);
   }, [defaultZipName]);
+
+  // If there are 0 valid rules and no ongoing export process, DO NOT render the footer at all!
+  // This eliminates visual clutter and prevents blocking the viewport when starting up or configuring templates.
+  if (validRuleCount === 0 && !isBusy) {
+    return null;
+  }
+
+  // Floating collapsed pill badge when user minimizes the footer
+  if (isCollapsed && !isBusy) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '18px',
+          right: '24px',
+          zIndex: 500,
+          animation: 'fadeIn 0.2s ease',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(false)}
+          className="btn btn-primary btn-sm"
+          style={{
+            boxShadow: '0 8px 25px rgba(2, 132, 199, 0.45)',
+            borderRadius: '30px',
+            padding: '9px 18px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.84rem',
+            fontWeight: 700,
+            border: '1.5px solid rgba(255, 255, 255, 0.25)',
+          }}
+          title="Bấm để mở rộng thanh xuất file PDF/ZIP"
+        >
+          <Archive size={16} />
+          <span>Sẵn sàng xuất: {validRuleCount} file ({totalAssignedPages} trang)</span>
+          <ChevronUp size={15} />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -44,10 +88,11 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderTop: '1px solid var(--border-medium)',
-        boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.1)',
-        padding: '12px 24px',
+        boxShadow: '0 -6px 30px rgba(0, 0, 0, 0.15)',
+        padding: '10px 24px',
         color: 'var(--text-main)',
         transition: 'background-color var(--transition-smooth), border-color var(--transition-smooth)',
+        animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       <div
@@ -58,14 +103,14 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '14px',
+          gap: '12px',
         }}
       >
         {/* Left: Summary & Diagnostics */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>
+              <span style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--text-main)' }}>
                 Sẵn sàng xuất: <span style={{ color: 'var(--border-active)' }}>{validRuleCount} file PDF</span>
               </span>
               <span className="badge badge-cyan" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
@@ -117,17 +162,19 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
         )}
 
         {/* Right: Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {/* ZIP Filename config */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'var(--bg-input)',
-            border: '1px solid var(--border-medium)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '4px 10px'
-          }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginRight: '6px', whiteSpace: 'nowrap' }}>Tên ZIP:</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-medium)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '3px 10px',
+            }}
+          >
+            <span style={{ fontSize: '0.76rem', color: 'var(--text-dim)', marginRight: '6px', whiteSpace: 'nowrap' }}>Tên ZIP:</span>
             <input
               type="text"
               value={zipName}
@@ -137,10 +184,10 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
                 background: 'transparent',
                 border: 'none',
                 color: 'var(--text-main)',
-                fontSize: '0.84rem',
+                fontSize: '0.82rem',
                 fontFamily: 'monospace',
                 outline: 'none',
-                width: '180px',
+                width: '160px',
               }}
             />
           </div>
@@ -150,10 +197,10 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
             type="button"
             onClick={() => onExportZip(zipName)}
             disabled={isBusy || validRuleCount === 0}
-            className="btn btn-primary btn-lg"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            className="btn btn-primary btn-sm"
+            style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px', fontWeight: 700 }}
           >
-            <Archive size={18} />
+            <Archive size={16} />
             <span>Tải file .ZIP</span>
           </button>
 
@@ -162,12 +209,24 @@ export const ExportActionBar: React.FC<ExportActionBarProps> = ({
             type="button"
             onClick={onSaveToDisk}
             disabled={isBusy || validRuleCount === 0}
-            className="btn btn-success btn-lg"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            className="btn btn-success btn-sm"
+            style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px', fontWeight: 700 }}
             title={hasDirectoryApi ? 'Ghi trực tiếp các file và thư mục con vào ổ đĩa máy tính' : 'Tính năng khả dụng trên Chrome, Edge, Cốc Cốc'}
           >
-            <HardDrive size={18} />
+            <HardDrive size={16} />
             <span>Lưu thẳng vào Ổ đĩa</span>
+          </button>
+
+          {/* Collapse Button */}
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(true)}
+            className="btn btn-ghost btn-sm"
+            style={{ color: 'var(--text-muted)', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+            title="Thu gọn thanh xuất file xuống góc màn hình"
+          >
+            <ChevronDown size={15} />
+            <span style={{ fontSize: '0.75rem' }}>Thu gọn</span>
           </button>
         </div>
       </div>
