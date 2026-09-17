@@ -1004,9 +1004,11 @@ export const App: React.FC = () => {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1.4fr) minmax(360px, 1fr)',
+                gridTemplateColumns: 'minmax(0, 1.4fr) minmax(380px, 1fr)',
                 gap: '24px',
-                alignItems: 'start',
+                alignItems: 'stretch',
+                height: validRules.length > 0 ? 'calc(100vh - 290px)' : 'calc(100vh - 230px)',
+                minHeight: '540px',
               }}
             >
               {/* Left: Visual Thumbnail Grid */}

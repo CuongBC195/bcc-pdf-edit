@@ -184,12 +184,23 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
   const cardWidth = zoomLevel === 'sm' ? 140 : zoomLevel === 'md' ? 180 : 240;
 
   return (
-    <div className="bento-card" style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div
+      className="bento-card"
+      style={{
+        padding: '20px',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+        boxSizing: 'border-box',
+      }}
+    >
       {/* Active Rule Guidance Banner */}
       {activeRule && (
         <div
           className="animate-fade-in"
           style={{
+            flexShrink: 0,
             padding: '10px 14px',
             marginBottom: '14px',
             borderRadius: 'var(--radius-sm)',
@@ -237,6 +248,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
       {/* Visual Workspace Toolbar */}
       <div
         style={{
+          flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -429,6 +441,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
 
       <div
         style={{
+          flexShrink: 0,
           fontSize: '0.78rem',
           color: 'var(--text-muted)',
           marginBottom: '14px',
@@ -481,10 +494,9 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
           }}
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
-            minHeight: '520px',
-            maxHeight: 'calc(100vh - 270px)',
-            paddingBottom: '24px',
+            paddingBottom: '16px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)',
             background: 'var(--bg-surface-elevated)',
@@ -862,14 +874,14 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
           }}
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
-            minHeight: '520px',
-            maxHeight: 'calc(100vh - 270px)',
             paddingRight: '6px',
-            paddingBottom: '24px',
+            paddingBottom: '16px',
             display: 'grid',
             gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
             gap: '16px',
+            alignContent: 'start',
           }}
         >
           {filteredPages.map((pageNum) => {

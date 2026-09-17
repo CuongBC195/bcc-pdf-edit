@@ -44,11 +44,14 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        minHeight: 0,
+        boxSizing: 'border-box',
       }}
     >
       {/* List Header */}
       <div
         style={{
+          flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -122,15 +125,14 @@ export const SplitRuleList: React.FC<SplitRuleListProps> = ({
         </button>
       </div>
 
-      {/* Rules Scrollable Container - Matches left panel height and scrolls smoothly */}
+      {/* Rules Scrollable Container - Fills 100% of available card height without dead space */}
       <div
         style={{
           flex: 1,
-          minHeight: '520px',
-          maxHeight: 'calc(100vh - 270px)',
+          minHeight: 0,
           overflowY: 'auto',
           paddingRight: '6px',
-          paddingBottom: '16px',
+          paddingBottom: '10px',
         }}
       >
         {rules.length === 0 ? (
