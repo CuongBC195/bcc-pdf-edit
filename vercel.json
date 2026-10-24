@@ -1,7 +1,16 @@
 {
   "version": 2,
+  "redirects": [
+    { "source": "/pdf", "destination": "/", "permanent": false },
+    { "source": "/pdf/", "destination": "/", "permanent": false },
+    { "source": "/pdf/index.html", "destination": "/", "permanent": false },
+    { "source": "/pdf/vi", "destination": "/", "permanent": false },
+    { "source": "/pdf/vi/", "destination": "/", "permanent": false },
+    { "source": "/pdf/vi/index.html", "destination": "/", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/c/(.*)", "destination": "/index.html" },
+    { "source": "/t/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {

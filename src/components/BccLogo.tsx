@@ -1,0 +1,24 @@
+import React from 'react';
+
+interface BccLogoProps {
+  size?: number;
+}
+
+export const BccLogo: React.FC<BccLogoProps> = ({ size = 38 }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      style={{ flexShrink: 0, display: 'block' }}
+      aria-hidden="true"
+    >
+      <rect width="40" height="40" rx="10" fill="#0284c7" />
+      <rect x="9.5" y="9" width="7.5" height="22" rx="3" fill="#ffffff" />
+      <rect x="20" y="9" width="10.5" height="9.5" rx="3" fill="#ffffff" />
+      <rect x="20" y="21.5" width="10.5" height="9.5" rx="3" fill="#bae6fd" />
+    </svg>
+  );
+};

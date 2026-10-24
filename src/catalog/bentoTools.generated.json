@@ -1,0 +1,1430 @@
+[
+  {
+    "id": "edit-pdf-text",
+    "href": "edit-pdf-text.html",
+    "i18nKey": "editPdfText",
+    "name": "Chỉnh sửa văn bản PDF",
+    "nameEn": "Edit PDF Text",
+    "description": "Nhấp vào bất kỳ đoạn văn nào và chỉnh sửa ngay tại chỗ với tính năng tự động dàn lại văn bản, phông chữ và kiểu dáng.",
+    "icon": "ph-cursor-text",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "pdf-workflow",
+    "href": "pdf-workflow.html",
+    "i18nKey": "pdfWorkflow",
+    "name": "Trình xây dựng quy trình PDF",
+    "nameEn": "PDF Workflow Builder",
+    "description": "Xây dựng quy trình xử lý PDF tùy chỉnh bằng trình chỉnh sửa nút trực quan.",
+    "icon": "ph-tree-structure",
+    "upstreamCategories": [
+      "Popular Tools"
+    ]
+  },
+  {
+    "id": "pdf-multi-tool",
+    "href": "pdf-multi-tool.html",
+    "i18nKey": "pdfMultiTool",
+    "name": "Công cụ đa năng PDF",
+    "nameEn": "PDF Multi Tool",
+    "description": "Gộp, Chia, Sắp xếp, Xóa, Xoay, Thêm trang trống, Trích xuất và Nhân đôi trong một giao diện thống nhất.",
+    "icon": "ph-pencil-ruler",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "merge-pdf",
+    "href": "merge-pdf.html",
+    "i18nKey": "mergePdf",
+    "name": "Gộp PDF",
+    "nameEn": "Merge PDF",
+    "description": "Kết hợp nhiều PDF thành một tệp. Giữ nguyên Bookmark.",
+    "icon": "ph-browsers",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "split-pdf",
+    "href": "split-pdf.html",
+    "i18nKey": "splitPdf",
+    "name": "Chia PDF",
+    "nameEn": "Split PDF",
+    "description": "Trích xuất một phạm vi trang thành PDF mới.",
+    "icon": "ph-scissors",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "compress-pdf",
+    "href": "compress-pdf.html",
+    "i18nKey": "compressPdf",
+    "name": "Nén PDF",
+    "nameEn": "Compress PDF",
+    "description": "Giảm kích thước tệp PDF của bạn.",
+    "icon": "ph-lightning",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "edit-pdf",
+    "href": "edit-pdf.html",
+    "i18nKey": "pdfEditor",
+    "name": "Trình chỉnh sửa PDF",
+    "nameEn": "PDF Editor",
+    "description": "Ghi chú, tô sáng, chỉnh sửa, bình luận, thêm hình dạng/hình ảnh, tìm kiếm và xem PDF.",
+    "icon": "ph-pencil-simple",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "jpg-to-pdf",
+    "href": "jpg-to-pdf.html",
+    "i18nKey": "jpgToPdf",
+    "name": "JPG sang PDF",
+    "nameEn": "JPG to PDF",
+    "description": "Tạo PDF từ hình ảnh JPG, JPEG và JPEG2000 (JP2/JPX).",
+    "icon": "ph-file-jpg",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "sign-pdf",
+    "href": "sign-pdf.html",
+    "i18nKey": "signPdf",
+    "name": "Ký PDF",
+    "nameEn": "Sign PDF",
+    "description": "Vẽ, gõ hoặc tải lên chữ ký của bạn.",
+    "icon": "ph-pen-nib",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "crop-pdf",
+    "href": "crop-pdf.html",
+    "i18nKey": "cropPdf",
+    "name": "Cắt PDF",
+    "nameEn": "Crop PDF",
+    "description": "Cắt lề của mọi trang trong PDF của bạn.",
+    "icon": "ph-crop",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "extract-pages",
+    "href": "extract-pages.html",
+    "i18nKey": "extractPages",
+    "name": "Trích xuất trang",
+    "nameEn": "Extract Pages",
+    "description": "Lưu một lựa chọn trang dưới dạng tệp mới.",
+    "icon": "ph-squares-four",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "organize-pdf",
+    "href": "organize-pdf.html",
+    "i18nKey": "duplicateOrganize",
+    "name": "Nhân đôi & Sắp xếp",
+    "nameEn": "Duplicate & Organize",
+    "description": "Nhân đôi, sắp xếp lại và xóa trang.",
+    "icon": "ph-files",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "delete-pages",
+    "href": "delete-pages.html",
+    "i18nKey": "deletePages",
+    "name": "Xóa trang",
+    "nameEn": "Delete Pages",
+    "description": "Xóa các trang cụ thể khỏi tài liệu của bạn.",
+    "icon": "ph-trash",
+    "upstreamCategories": [
+      "Popular Tools",
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "bookmark",
+    "href": "bookmark.html",
+    "i18nKey": "editBookmarks",
+    "name": "Chỉnh sửa Bookmark",
+    "nameEn": "Edit Bookmarks",
+    "description": "Thêm, chỉnh sửa, nhập, xóa và trích xuất bookmark PDF.",
+    "icon": "ph-bookmark",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "table-of-contents",
+    "href": "table-of-contents.html",
+    "i18nKey": "tableOfContents",
+    "name": "Mục lục",
+    "nameEn": "Table of Contents",
+    "description": "Tạo trang mục lục từ bookmark PDF.",
+    "icon": "ph-list",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "page-numbers",
+    "href": "page-numbers.html",
+    "i18nKey": "pageNumbers",
+    "name": "Số trang",
+    "nameEn": "Page Numbers",
+    "description": "Chèn số trang vào tài liệu của bạn.",
+    "icon": "ph-list-numbers",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "add-page-labels",
+    "href": "add-page-labels.html",
+    "i18nKey": "addPageLabels",
+    "name": "Thêm nhãn trang",
+    "nameEn": "Add Page Labels",
+    "description": "Áp dụng nhãn trang PDF với số La Mã, tiền tố và giá trị bắt đầu tùy chỉnh.",
+    "icon": "ph-text-aa",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "bates-numbering",
+    "href": "bates-numbering.html",
+    "i18nKey": "batesNumbering",
+    "name": "Đánh số Bates",
+    "nameEn": "Bates Numbering",
+    "description": "Thêm số Bates tuần tự trên một hoặc nhiều tệp PDF.",
+    "icon": "ph-hash",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "add-watermark",
+    "href": "add-watermark.html",
+    "i18nKey": "addWatermark",
+    "name": "Thêm Watermark",
+    "nameEn": "Add Watermark",
+    "description": "Đóng dấu văn bản hoặc hình ảnh lên các trang PDF của bạn.",
+    "icon": "ph-drop",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "header-footer",
+    "href": "header-footer.html",
+    "i18nKey": "headerFooter",
+    "name": "Đầu trang & Chân trang",
+    "nameEn": "Header & Footer",
+    "description": "Thêm văn bản vào đầu và cuối trang.",
+    "icon": "ph-paragraph",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "invert-colors",
+    "href": "invert-colors.html",
+    "i18nKey": "invertColors",
+    "name": "Đảo ngược màu",
+    "nameEn": "Invert Colors",
+    "description": "Tạo phiên bản \"chế độ tối\" cho PDF của bạn.",
+    "icon": "ph-circle-half",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "scanner-effect",
+    "href": "scanner-effect.html",
+    "i18nKey": "scannerEffect",
+    "name": "Hiệu ứng máy quét",
+    "nameEn": "Scanner Effect",
+    "description": "Làm cho PDF trông giống như tài liệu đã quét.",
+    "icon": "ph-scan",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "adjust-colors",
+    "href": "adjust-colors.html",
+    "i18nKey": "adjustColors",
+    "name": "Điều chỉnh màu sắc",
+    "nameEn": "Adjust Colors",
+    "description": "Tinh chỉnh độ sáng, tương phản, độ bão hòa và nhiều hơn nữa.",
+    "icon": "ph-sliders-horizontal",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "background-color",
+    "href": "background-color.html",
+    "i18nKey": "backgroundColor",
+    "name": "Màu nền",
+    "nameEn": "Background Color",
+    "description": "Thay đổi màu nền của PDF của bạn.",
+    "icon": "ph-palette",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "text-color",
+    "href": "text-color.html",
+    "i18nKey": "changeTextColor",
+    "name": "Thay đổi màu văn bản",
+    "nameEn": "Change Text Color",
+    "description": "Thay đổi màu văn bản trong PDF của bạn.",
+    "icon": "ph-eyedropper",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "add-stamps",
+    "href": "add-stamps.html",
+    "i18nKey": "addStamps",
+    "name": "Thêm tem",
+    "nameEn": "Add Stamps",
+    "description": "Thêm tem hình ảnh vào PDF của bạn bằng thanh công cụ ghi chú.",
+    "icon": "ph-stamp",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "remove-annotations",
+    "href": "remove-annotations.html",
+    "i18nKey": "removeAnnotations",
+    "name": "Xóa ghi chú",
+    "nameEn": "Remove Annotations",
+    "description": "Loại bỏ bình luận, tô sáng và liên kết.",
+    "icon": "ph-eraser",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "form-filler",
+    "href": "form-filler.html",
+    "i18nKey": "pdfFormFiller",
+    "name": "Điền form PDF",
+    "nameEn": "PDF Form Filler",
+    "description": "Điền form trực tiếp trong trình duyệt. Cũng hỗ trợ form XFA.",
+    "icon": "ph-pencil-line",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "form-creator",
+    "href": "form-creator.html",
+    "i18nKey": "createPdfForm",
+    "name": "Tạo form PDF",
+    "nameEn": "Create PDF Form",
+    "description": "Tạo form PDF có thể điền với các trường văn bản kéo và thả.",
+    "icon": "ph-file-plus",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "remove-blank-pages",
+    "href": "remove-blank-pages.html",
+    "i18nKey": "removeBlankPages",
+    "name": "Xóa trang trống",
+    "nameEn": "Remove Blank Pages",
+    "description": "Tự động phát hiện và xóa trang trống.",
+    "icon": "ph-file-minus",
+    "upstreamCategories": [
+      "Edit & Annotate"
+    ]
+  },
+  {
+    "id": "image-to-pdf",
+    "href": "image-to-pdf.html",
+    "i18nKey": "imageToPdf",
+    "name": "Hình ảnh sang PDF",
+    "nameEn": "Images to PDF",
+    "description": "Chuyển đổi JPG, PNG, BMP, GIF, TIFF, PNM, PGM, PBM, PPM, PAM, JXR, JPX, JP2, PSD, SVG, HEIC, WebP sang PDF.",
+    "icon": "ph-images",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "png-to-pdf",
+    "href": "png-to-pdf.html",
+    "i18nKey": "pngToPdf",
+    "name": "PNG sang PDF",
+    "nameEn": "PNG to PDF",
+    "description": "Tạo PDF từ một hoặc nhiều hình ảnh PNG.",
+    "icon": "ph-file-png",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "webp-to-pdf",
+    "href": "webp-to-pdf.html",
+    "i18nKey": "webpToPdf",
+    "name": "WebP sang PDF",
+    "nameEn": "WebP to PDF",
+    "description": "Tạo PDF từ một hoặc nhiều hình ảnh WebP.",
+    "icon": "ph-image",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "svg-to-pdf",
+    "href": "svg-to-pdf.html",
+    "i18nKey": "svgToPdf",
+    "name": "SVG sang PDF",
+    "nameEn": "SVG to PDF",
+    "description": "Tạo PDF từ một hoặc nhiều hình ảnh SVG.",
+    "icon": "ph-file-svg",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "bmp-to-pdf",
+    "href": "bmp-to-pdf.html",
+    "i18nKey": "bmpToPdf",
+    "name": "BMP sang PDF",
+    "nameEn": "BMP to PDF",
+    "description": "Tạo PDF từ một hoặc nhiều hình ảnh BMP.",
+    "icon": "ph-image",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "heic-to-pdf",
+    "href": "heic-to-pdf.html",
+    "i18nKey": "heicToPdf",
+    "name": "HEIC sang PDF",
+    "nameEn": "HEIC to PDF",
+    "description": "Tạo PDF từ một hoặc nhiều hình ảnh HEIC.",
+    "icon": "ph-device-mobile",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "tiff-to-pdf",
+    "href": "tiff-to-pdf.html",
+    "i18nKey": "tiffToPdf",
+    "name": "TIFF sang PDF",
+    "nameEn": "TIFF to PDF",
+    "description": "Tạo PDF từ một hoặc nhiều hình ảnh TIFF.",
+    "icon": "ph-image",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "txt-to-pdf",
+    "href": "txt-to-pdf.html",
+    "i18nKey": "textToPdf",
+    "name": "Văn bản sang PDF",
+    "nameEn": "Text to PDF",
+    "description": "Chuyển đổi tệp văn bản thuần túy thành PDF.",
+    "icon": "ph-text-t",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "markdown-to-pdf",
+    "href": "markdown-to-pdf.html",
+    "i18nKey": "markdownToPdf",
+    "name": "Markdown sang PDF",
+    "nameEn": "Markdown to PDF",
+    "description": "Viết hoặc dán Markdown và xuất nó thành PDF được định dạng đẹp.",
+    "icon": "ph-markdown-logo",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "json-to-pdf",
+    "href": "json-to-pdf.html",
+    "i18nKey": "jsonToPdf",
+    "name": "JSON sang PDF",
+    "nameEn": "JSON to PDF",
+    "description": "Chuyển đổi tệp JSON sang định dạng PDF.",
+    "icon": "ph-file-code",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "odt-to-pdf",
+    "href": "odt-to-pdf.html",
+    "i18nKey": "odtToPdf",
+    "name": "ODT sang PDF",
+    "nameEn": "ODT to PDF",
+    "description": "Chuyển đổi tệp OpenDocument Text sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-file",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "csv-to-pdf",
+    "href": "csv-to-pdf.html",
+    "i18nKey": "csvToPdf",
+    "name": "CSV sang PDF",
+    "nameEn": "CSV to PDF",
+    "description": "Chuyển đổi tệp bảng tính CSV sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-file-csv",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "rtf-to-pdf",
+    "href": "rtf-to-pdf.html",
+    "i18nKey": "rtfToPdf",
+    "name": "RTF sang PDF",
+    "nameEn": "RTF to PDF",
+    "description": "Chuyển đổi tài liệu Rich Text Format sang PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-file-text",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "word-to-pdf",
+    "href": "word-to-pdf.html",
+    "i18nKey": "wordToPdf",
+    "name": "Word sang PDF",
+    "nameEn": "Word to PDF",
+    "description": "Chuyển đổi tài liệu Word (DOCX, DOC, ODT, RTF) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-microsoft-word-logo",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "excel-to-pdf",
+    "href": "excel-to-pdf.html",
+    "i18nKey": "excelToPdf",
+    "name": "Excel sang PDF",
+    "nameEn": "Excel to PDF",
+    "description": "Chuyển đổi bảng tính Excel (XLSX, XLS, ODS, CSV) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-microsoft-excel-logo",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "powerpoint-to-pdf",
+    "href": "powerpoint-to-pdf.html",
+    "i18nKey": "powerpointToPdf",
+    "name": "PowerPoint sang PDF",
+    "nameEn": "PowerPoint to PDF",
+    "description": "Chuyển đổi bài thuyết trình PowerPoint (PPTX, PPT, ODP) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-microsoft-powerpoint-logo",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "xps-to-pdf",
+    "href": "xps-to-pdf.html",
+    "i18nKey": "xpsToPdf",
+    "name": "XPS sang PDF",
+    "nameEn": "XPS to PDF",
+    "description": "Chuyển đổi tài liệu XPS/OXPS sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-scan",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "mobi-to-pdf",
+    "href": "mobi-to-pdf.html",
+    "i18nKey": "mobiToPdf",
+    "name": "MOBI sang PDF",
+    "nameEn": "MOBI to PDF",
+    "description": "Chuyển đổi sách điện tử MOBI sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-book-open-text",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "epub-to-pdf",
+    "href": "epub-to-pdf.html",
+    "i18nKey": "epubToPdf",
+    "name": "EPUB sang PDF",
+    "nameEn": "EPUB to PDF",
+    "description": "Chuyển đổi sách điện tử EPUB sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-book-open-text",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "fb2-to-pdf",
+    "href": "fb2-to-pdf.html",
+    "i18nKey": "fb2ToPdf",
+    "name": "FB2 sang PDF",
+    "nameEn": "FB2 to PDF",
+    "description": "Chuyển đổi sách điện tử FictionBook (FB2) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-book-bookmark",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "cbz-to-pdf",
+    "href": "cbz-to-pdf.html",
+    "i18nKey": "cbzToPdf",
+    "name": "CBZ sang PDF",
+    "nameEn": "CBZ to PDF",
+    "description": "Chuyển đổi kho lưu trữ truyện tranh (CBZ/CBR) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-book-open",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "wpd-to-pdf",
+    "href": "wpd-to-pdf.html",
+    "i18nKey": "wpdToPdf",
+    "name": "WPD sang PDF",
+    "nameEn": "WPD to PDF",
+    "description": "Chuyển đổi tài liệu WordPerfect (WPD) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-file-text",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "wps-to-pdf",
+    "href": "wps-to-pdf.html",
+    "i18nKey": "wpsToPdf",
+    "name": "WPS sang PDF",
+    "nameEn": "WPS to PDF",
+    "description": "Chuyển đổi tài liệu WPS Office sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-file-text",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "xml-to-pdf",
+    "href": "xml-to-pdf.html",
+    "i18nKey": "xmlToPdf",
+    "name": "XML sang PDF",
+    "nameEn": "XML to PDF",
+    "description": "Chuyển đổi tài liệu XML sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-file-code",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "pages-to-pdf",
+    "href": "pages-to-pdf.html",
+    "i18nKey": "pagesToPdf",
+    "name": "Pages sang PDF",
+    "nameEn": "Pages to PDF",
+    "description": "Chuyển đổi tài liệu Apple Pages sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-file-text",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "odg-to-pdf",
+    "href": "odg-to-pdf.html",
+    "i18nKey": "odgToPdf",
+    "name": "ODG sang PDF",
+    "nameEn": "ODG to PDF",
+    "description": "Chuyển đổi tệp OpenDocument Graphics (ODG) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-image",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "ods-to-pdf",
+    "href": "ods-to-pdf.html",
+    "i18nKey": "odsToPdf",
+    "name": "ODS sang PDF",
+    "nameEn": "ODS to PDF",
+    "description": "Chuyển đổi tệp OpenDocument Spreadsheet (ODS) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-table",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "odp-to-pdf",
+    "href": "odp-to-pdf.html",
+    "i18nKey": "odpToPdf",
+    "name": "ODP sang PDF",
+    "nameEn": "ODP to PDF",
+    "description": "Chuyển đổi tệp OpenDocument Presentation (ODP) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-presentation",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "pub-to-pdf",
+    "href": "pub-to-pdf.html",
+    "i18nKey": "pubToPdf",
+    "name": "PUB sang PDF",
+    "nameEn": "PUB to PDF",
+    "description": "Chuyển đổi tệp Microsoft Publisher (PUB) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-book-open",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "vsd-to-pdf",
+    "href": "vsd-to-pdf.html",
+    "i18nKey": "vsdToPdf",
+    "name": "VSD sang PDF",
+    "nameEn": "VSD to PDF",
+    "description": "Chuyển đổi tệp Microsoft Visio (VSD, VSDX) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-git-branch",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "psd-to-pdf",
+    "href": "psd-to-pdf.html",
+    "i18nKey": "psdToPdf",
+    "name": "PSD sang PDF",
+    "nameEn": "PSD to PDF",
+    "description": "Chuyển đổi tệp Adobe Photoshop (PSD) sang định dạng PDF. Hỗ trợ nhiều tệp.",
+    "icon": "ph-image",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "email-to-pdf",
+    "href": "email-to-pdf.html",
+    "i18nKey": "emailToPdf",
+    "name": "Email sang PDF",
+    "nameEn": "Email to PDF",
+    "description": "Chuyển đổi tệp email (EML, MSG) sang định dạng PDF. Hỗ trợ xuất Outlook và định dạng email tiêu chuẩn.",
+    "icon": "ph-envelope",
+    "upstreamCategories": [
+      "Convert to PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-jpg",
+    "href": "pdf-to-jpg.html",
+    "i18nKey": "pdfToJpg",
+    "name": "PDF sang JPG",
+    "nameEn": "PDF to JPG",
+    "description": "Chuyển đổi mỗi trang PDF thành hình ảnh JPG.",
+    "icon": "ph-file-image",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-png",
+    "href": "pdf-to-png.html",
+    "i18nKey": "pdfToPng",
+    "name": "PDF sang PNG",
+    "nameEn": "PDF to PNG",
+    "description": "Chuyển đổi mỗi trang PDF thành hình ảnh PNG.",
+    "icon": "ph-file-image",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-webp",
+    "href": "pdf-to-webp.html",
+    "i18nKey": "pdfToWebp",
+    "name": "PDF sang WebP",
+    "nameEn": "PDF to WebP",
+    "description": "Chuyển đổi mỗi trang PDF thành hình ảnh WebP.",
+    "icon": "ph-file-image",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-bmp",
+    "href": "pdf-to-bmp.html",
+    "i18nKey": "pdfToBmp",
+    "name": "PDF sang BMP",
+    "nameEn": "PDF to BMP",
+    "description": "Chuyển đổi mỗi trang PDF thành hình ảnh BMP.",
+    "icon": "ph-file-image",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-tiff",
+    "href": "pdf-to-tiff.html",
+    "i18nKey": "pdfToTiff",
+    "name": "PDF sang TIFF",
+    "nameEn": "PDF to TIFF",
+    "description": "Chuyển đổi mỗi trang PDF thành hình ảnh TIFF.",
+    "icon": "ph-file-image",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-cbz",
+    "href": "pdf-to-cbz.html",
+    "i18nKey": "pdfToCbz",
+    "name": "PDF sang CBZ",
+    "nameEn": "PDF to CBZ",
+    "description": "Chuyển đổi PDF thành tệp CBZ (Kho lưu trữ truyện tranh) cho trình đọc truyện tranh.",
+    "icon": "ph-book-open",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-svg",
+    "href": "pdf-to-svg.html",
+    "i18nKey": "pdfToSvg",
+    "name": "PDF sang SVG",
+    "nameEn": "PDF to SVG",
+    "description": "Chuyển đổi mỗi trang PDF thành đồ họa vector có thể mở rộng (SVG) với chất lượng hoàn hảo ở mọi kích thước.",
+    "icon": "ph-file-code",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-csv",
+    "href": "pdf-to-csv.html",
+    "i18nKey": "pdfToCsv",
+    "name": "PDF sang CSV",
+    "nameEn": "PDF to CSV",
+    "description": "Trích xuất bảng từ PDF và chuyển đổi sang định dạng CSV.",
+    "icon": "ph-file-csv",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-excel",
+    "href": "pdf-to-excel.html",
+    "i18nKey": "pdfToExcel",
+    "name": "PDF sang Excel",
+    "nameEn": "PDF to Excel",
+    "description": "Trích xuất bảng từ PDF và chuyển đổi sang định dạng Excel (XLSX).",
+    "icon": "ph-microsoft-excel-logo",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-greyscale",
+    "href": "pdf-to-greyscale.html",
+    "i18nKey": "pdfToGreyscale",
+    "name": "PDF sang thang xám",
+    "nameEn": "PDF to Greyscale",
+    "description": "Chuyển đổi tất cả màu sắc sang đen trắng.",
+    "icon": "ph-palette",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-json",
+    "href": "pdf-to-json.html",
+    "i18nKey": "pdfToJson",
+    "name": "PDF sang JSON",
+    "nameEn": "PDF to JSON",
+    "description": "Chuyển đổi tệp PDF sang định dạng JSON.",
+    "icon": "ph-file-code",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-word",
+    "href": "pdf-to-word.html",
+    "i18nKey": "pdfToWord",
+    "name": "PDF sang Word",
+    "nameEn": "PDF to Word",
+    "description": "Chuyển đổi tệp PDF thành tài liệu Word có thể chỉnh sửa.",
+    "icon": "ph-microsoft-word-logo",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "extract-images",
+    "href": "extract-images.html",
+    "i18nKey": "extractImages",
+    "name": "Trích xuất hình ảnh",
+    "nameEn": "Extract Images",
+    "description": "Trích xuất tất cả hình ảnh nhúng từ tệp PDF của bạn.",
+    "icon": "ph-download-simple",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-markdown",
+    "href": "pdf-to-markdown.html",
+    "i18nKey": "pdfToMarkdown",
+    "name": "PDF sang Markdown",
+    "nameEn": "PDF to Markdown",
+    "description": "Chuyển đổi văn bản và bảng PDF sang định dạng Markdown.",
+    "icon": "ph-markdown-logo",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "prepare-pdf-for-ai",
+    "href": "prepare-pdf-for-ai.html",
+    "i18nKey": "preparePdfForAi",
+    "name": "Chuẩn bị PDF cho AI",
+    "nameEn": "Prepare PDF for AI",
+    "description": "Trích xuất nội dung PDF dưới dạng JSON LlamaIndex cho quy trình RAG/LLM.",
+    "icon": "ph-sparkle",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "pdf-to-text",
+    "href": "pdf-to-text.html",
+    "i18nKey": "pdfToText",
+    "name": "PDF sang Văn bản",
+    "nameEn": "PDF to Text",
+    "description": "Trích xuất văn bản từ tệp PDF và lưu dưới dạng tệp văn bản (.txt). Hỗ trợ nhiều tệp.",
+    "icon": "ph-text-aa",
+    "upstreamCategories": [
+      "Convert from PDF"
+    ]
+  },
+  {
+    "id": "ocr-pdf",
+    "href": "ocr-pdf.html",
+    "i18nKey": "ocrPdf",
+    "name": "OCR PDF",
+    "nameEn": "OCR PDF",
+    "description": "Làm cho PDF có thể tìm kiếm và sao chép được.",
+    "icon": "ph-barcode",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "alternate-merge",
+    "href": "alternate-merge.html",
+    "i18nKey": "alternateMerge",
+    "name": "Xen kẽ & Trộn trang",
+    "nameEn": "Alternate & Mix Pages",
+    "description": "Gộp PDF bằng cách xen kẽ trang từ mỗi PDF. Giữ nguyên Bookmark.",
+    "icon": "ph-shuffle",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "duplex-collate",
+    "href": "duplex-collate.html",
+    "i18nKey": "duplexCollate",
+    "name": "Sắp xếp bản quét hai mặt",
+    "nameEn": "Duplex Collate",
+    "description": "Sắp xếp lại tệp PDF được quét thành hai khối (tất cả mặt trước, rồi tất cả mặt sau) thành đúng thứ tự trước/sau.",
+    "icon": "ph-arrows-vertical",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "overlay-pdf",
+    "href": "overlay-pdf.html",
+    "i18nKey": "pdfOverlay",
+    "name": "Chồng PDF",
+    "nameEn": "PDF Overlay",
+    "description": "Chồng hoặc lót các trang từ một PDF lên PDF khác.",
+    "icon": "ph-stack-simple",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "add-attachments",
+    "href": "add-attachments.html",
+    "i18nKey": "addAttachments",
+    "name": "Thêm tệp đính kèm",
+    "nameEn": "Add Attachments",
+    "description": "Nhúng một hoặc nhiều tệp vào PDF của bạn.",
+    "icon": "ph-paperclip",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "extract-attachments",
+    "href": "extract-attachments.html",
+    "i18nKey": "extractAttachments",
+    "name": "Trích xuất tệp đính kèm",
+    "nameEn": "Extract Attachments",
+    "description": "Trích xuất tất cả tệp được nhúng từ PDF thành ZIP.",
+    "icon": "ph-download",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "edit-attachments",
+    "href": "edit-attachments.html",
+    "i18nKey": "editAttachments",
+    "name": "Chỉnh sửa tệp đính kèm",
+    "nameEn": "Edit Attachments",
+    "description": "Xem hoặc xóa tệp đính kèm trong PDF của bạn.",
+    "icon": "ph-paperclip-horizontal",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "pdf-layers",
+    "href": "pdf-layers.html",
+    "i18nKey": "pdfOcg",
+    "name": "Lớp PDF (OCG)",
+    "nameEn": "PDF OCG",
+    "description": "Xem, chuyển đổi, thêm và xóa các lớp OCG trong PDF của bạn.",
+    "icon": "ph-stack-simple",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "extract-tables",
+    "href": "extract-tables.html",
+    "i18nKey": "extractTables",
+    "name": "Trích xuất bảng PDF",
+    "nameEn": "Extract Tables",
+    "description": "Trích xuất bảng từ tệp PDF và xuất dưới dạng CSV, JSON hoặc Markdown.",
+    "icon": "ph-table",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "divide-pages",
+    "href": "divide-pages.html",
+    "i18nKey": "dividePages",
+    "name": "Chia trang",
+    "nameEn": "Divide Pages",
+    "description": "Chia trang theo chiều ngang hoặc chiều dọc.",
+    "icon": "ph-columns",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "add-blank-page",
+    "href": "add-blank-page.html",
+    "i18nKey": "addBlankPage",
+    "name": "Thêm trang trống",
+    "nameEn": "Add Blank Page",
+    "description": "Chèn trang trống ở bất kỳ đâu trong PDF của bạn.",
+    "icon": "ph-file-plus",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "reverse-pages",
+    "href": "reverse-pages.html",
+    "i18nKey": "reversePages",
+    "name": "Đảo ngược trang",
+    "nameEn": "Reverse Pages",
+    "description": "Lật ngược thứ tự tất cả các trang trong tài liệu của bạn.",
+    "icon": "ph-sort-descending",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "rotate-pdf",
+    "href": "rotate-pdf.html",
+    "i18nKey": "rotatePdf",
+    "name": "Xoay PDF",
+    "nameEn": "Rotate PDF",
+    "description": "Xoay trang theo bội số 90 độ.",
+    "icon": "ph-arrow-clockwise",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "rotate-custom",
+    "href": "rotate-custom.html",
+    "i18nKey": "rotateCustom",
+    "name": "Xoay theo độ tùy chỉnh",
+    "nameEn": "Rotate by Custom Degrees",
+    "description": "Xoay trang theo bất kỳ góc độ tùy chỉnh nào.",
+    "icon": "ph-arrows-clockwise",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "n-up-pdf",
+    "href": "n-up-pdf.html",
+    "i18nKey": "nUpPdf",
+    "name": "N-Up PDF",
+    "nameEn": "N-Up PDF",
+    "description": "Sắp xếp nhiều trang lên một tờ.",
+    "icon": "ph-squares-four",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "pdf-booklet",
+    "href": "pdf-booklet.html",
+    "i18nKey": "pdfBooklet",
+    "name": "Sách nhỏ PDF",
+    "nameEn": "PDF Booklet",
+    "description": "Sắp xếp lại các trang để in sách nhỏ hai mặt. Gấp và đóng ghim để tạo sách nhỏ.",
+    "icon": "ph-book-open",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "combine-single-page",
+    "href": "combine-single-page.html",
+    "i18nKey": "combineToSinglePage",
+    "name": "Kết hợp thành một trang",
+    "nameEn": "Combine to Single Page",
+    "description": "Ghép tất cả các trang thành một cuộn liên tục.",
+    "icon": "ph-arrows-out-line-vertical",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "view-metadata",
+    "href": "view-metadata.html",
+    "i18nKey": "viewMetadata",
+    "name": "Xem Metadata",
+    "nameEn": "View Metadata",
+    "description": "Kiểm tra các thuộc tính ẩn của PDF của bạn.",
+    "icon": "ph-info",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "edit-metadata",
+    "href": "edit-metadata.html",
+    "i18nKey": "editMetadata",
+    "name": "Chỉnh sửa Metadata",
+    "nameEn": "Edit Metadata",
+    "description": "Thay đổi tác giả, tiêu đề và các thuộc tính khác.",
+    "icon": "ph-file-code",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "pdf-to-zip",
+    "href": "pdf-to-zip.html",
+    "i18nKey": "pdfsToZip",
+    "name": "PDF sang ZIP",
+    "nameEn": "PDFs to ZIP",
+    "description": "Đóng gói nhiều tệp PDF thành kho lưu trữ ZIP.",
+    "icon": "ph-file-zip",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "compare-pdfs",
+    "href": "compare-pdfs.html",
+    "i18nKey": "comparePdfs",
+    "name": "So sánh PDF",
+    "nameEn": "Compare PDFs",
+    "description": "So sánh hai PDF cạnh nhau.",
+    "icon": "ph-git-diff",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "posterize-pdf",
+    "href": "posterize-pdf.html",
+    "i18nKey": "posterizePdf",
+    "name": "Posterize PDF",
+    "nameEn": "Posterize PDF",
+    "description": "Chia một trang lớn thành nhiều trang nhỏ hơn.",
+    "icon": "ph-notepad",
+    "upstreamCategories": [
+      "Organize & Manage"
+    ]
+  },
+  {
+    "id": "pdf-to-pdfa",
+    "href": "pdf-to-pdfa.html",
+    "i18nKey": "pdfToPdfa",
+    "name": "PDF sang PDF/A",
+    "nameEn": "PDF to PDF/A",
+    "description": "Chuyển đổi PDF sang PDF/A để lưu trữ lâu dài.",
+    "icon": "ph-archive",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "fix-page-size",
+    "href": "fix-page-size.html",
+    "i18nKey": "fixPageSize",
+    "name": "Sửa kích thước trang",
+    "nameEn": "Fix Page Size",
+    "description": "Chuẩn hóa tất cả các trang về cùng một kích thước.",
+    "icon": "ph-ruler",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "linearize-pdf",
+    "href": "linearize-pdf.html",
+    "i18nKey": "linearizePdf",
+    "name": "Tuyến tính hóa PDF",
+    "nameEn": "Linearize PDF",
+    "description": "Tối ưu hóa PDF để xem web nhanh.",
+    "icon": "ph-gauge",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "page-dimensions",
+    "href": "page-dimensions.html",
+    "i18nKey": "pageDimensions",
+    "name": "Kích thước trang",
+    "nameEn": "Page Dimensions",
+    "description": "Phân tích kích thước trang, hướng và đơn vị.",
+    "icon": "ph-ruler",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "remove-restrictions",
+    "href": "remove-restrictions.html",
+    "i18nKey": "removeRestrictions",
+    "name": "Xóa hạn chế",
+    "nameEn": "Remove Restrictions",
+    "description": "Xóa bảo vệ mật khẩu và hạn chế bảo mật liên quan đến tệp PDF được ký số.",
+    "icon": "ph-link-break",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "repair-pdf",
+    "href": "repair-pdf.html",
+    "i18nKey": "repairPdf",
+    "name": "Sửa chữa PDF",
+    "nameEn": "Repair PDF",
+    "description": "Khôi phục dữ liệu từ tệp PDF bị hỏng hoặc hư hỏng.",
+    "icon": "ph-wrench",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "rasterize-pdf",
+    "href": "rasterize-pdf.html",
+    "i18nKey": "rasterizePdf",
+    "name": "Rasterize PDF",
+    "nameEn": "Rasterize PDF",
+    "description": "Chuyển đổi PDF thành PDF dựa trên hình ảnh. Làm phẳng các lớp và xóa văn bản có thể chọn.",
+    "icon": "ph-image",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "deskew-pdf",
+    "href": "deskew-pdf.html",
+    "i18nKey": "deskewPdf",
+    "name": "Chỉnh nghiêng PDF",
+    "nameEn": "Deskew PDF",
+    "description": "Tự động làm thẳng các trang quét bị nghiêng bằng OpenCV.",
+    "icon": "ph-perspective",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "font-to-outline",
+    "href": "font-to-outline.html",
+    "i18nKey": "fontToOutline",
+    "name": "Phông chữ thành đường viền",
+    "nameEn": "Font to Outline",
+    "description": "Chuyển đổi tất cả phông chữ thành đường viền vector để hiển thị nhất quán trên mọi thiết bị.",
+    "icon": "ph-text-outdent",
+    "upstreamCategories": [
+      "Optimize & Repair"
+    ]
+  },
+  {
+    "id": "protect-pdf",
+    "href": "protect-pdf.html",
+    "i18nKey": "protectPdf",
+    "name": "Mã hóa PDF",
+    "nameEn": "Protect PDF",
+    "description": "Khóa PDF của bạn bằng cách thêm mật khẩu.",
+    "icon": "ph-lock",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "sanitize-pdf",
+    "href": "sanitize-pdf.html",
+    "i18nKey": "sanitizePdf",
+    "name": "Làm sạch PDF",
+    "nameEn": "Sanitize PDF",
+    "description": "Xóa metadata, ghi chú, script và nhiều hơn nữa.",
+    "icon": "ph-broom",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "unlock-pdf",
+    "href": "unlock-pdf.html",
+    "i18nKey": "unlockPdf",
+    "name": "Giải mã PDF",
+    "nameEn": "Unlock PDF",
+    "description": "Mở khóa PDF bằng cách xóa bảo vệ mật khẩu.",
+    "icon": "ph-lock-open",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "flatten-pdf",
+    "href": "flatten-pdf.html",
+    "i18nKey": "flattenPdf",
+    "name": "Làm phẳng PDF",
+    "nameEn": "Flatten PDF",
+    "description": "Làm cho trường form và ghi chú không thể chỉnh sửa.",
+    "icon": "ph-stack",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "remove-metadata",
+    "href": "remove-metadata.html",
+    "i18nKey": "removeMetadata",
+    "name": "Xóa Metadata",
+    "nameEn": "Remove Metadata",
+    "description": "Loại bỏ dữ liệu ẩn khỏi PDF của bạn.",
+    "icon": "ph-file-x",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "change-permissions",
+    "href": "change-permissions.html",
+    "i18nKey": "changePermissions",
+    "name": "Thay đổi quyền",
+    "nameEn": "Change Permissions",
+    "description": "Đặt hoặc thay đổi quyền người dùng trên PDF.",
+    "icon": "ph-shield-check",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "digital-sign-pdf",
+    "href": "digital-sign-pdf.html",
+    "i18nKey": "digitalSignPdf",
+    "name": "Chữ ký số PDF",
+    "nameEn": "Digital Signature",
+    "description": "Thêm chữ ký số mật mã vào PDF của bạn bằng chứng chỉ X.509. Hỗ trợ định dạng PKCS#12 (.pfx, .p12) và PEM. Khóa riêng của bạn không bao giờ rời khỏi trình duyệt.",
+    "icon": "ph-certificate",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "validate-signature-pdf",
+    "href": "validate-signature-pdf.html",
+    "i18nKey": "validateSignaturePdf",
+    "name": "Xác minh chữ ký PDF",
+    "nameEn": "Validate Signature",
+    "description": "Xác minh chữ ký số trong tệp PDF của bạn. Kiểm tra hiệu lực chứng chỉ, xem thông tin người ký và xác nhận tính toàn vẹn tài liệu. Tất cả xử lý diễn ra trong trình duyệt của bạn.",
+    "icon": "ph-seal-check",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  },
+  {
+    "id": "timestamp-pdf",
+    "href": "timestamp-pdf.html",
+    "i18nKey": "timestampPdf",
+    "name": "Đóng dấu thời gian PDF",
+    "nameEn": "Timestamp PDF",
+    "description": "Thêm dấu thời gian RFC 3161 vào PDF của bạn thông qua máy chủ TSA đáng tin cậy. Chứng minh tài liệu của bạn tồn tại tại một thời điểm cụ thể. Không cần chứng chỉ.",
+    "icon": "ph-clock",
+    "upstreamCategories": [
+      "Secure PDF"
+    ]
+  }
+]

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Layers, Moon, Sun, ShieldCheck, FolderOpen } from 'lucide-react';
+import { Link } from 'react-router';
+import { ArrowLeft, Moon, Sun, FolderOpen } from 'lucide-react';
+import { BccLogo } from './BccLogo';
 
 interface HeaderProps {
   theme: 'dark' | 'light';
@@ -20,30 +22,35 @@ export const Header: React.FC<HeaderProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
         padding: '16px 0',
         marginBottom: '20px',
         borderBottom: '1px solid var(--border-subtle)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div
+        <Link
+          to="/"
+          className="btn btn-secondary btn-sm"
           style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #0284c7, #06b6d4)',
-            display: 'flex',
+            padding: '7px 12px',
+            textDecoration: 'none',
+            display: 'inline-flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 10px rgba(2, 132, 199, 0.3)',
+            gap: '6px',
+            fontSize: '0.8rem',
           }}
+          title="Quay về Cổng công cụ BCCPDF Hub"
         >
-          <Layers size={22} color="#ffffff" />
-        </div>
+          <ArrowLeft size={15} />
+          <span>Tất cả công cụ</span>
+        </Link>
+        <BccLogo size={38} />
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h1 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>
-              BCC<span style={{ color: 'var(--accent-cyan)' }}>PDF</span>
+              bcc<span style={{ color: 'var(--accent-cyan)' }}>Hub</span>
             </h1>
             <span className="badge badge-cyan" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
               Multi-Split Pro
@@ -74,23 +81,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Danh sách tệp ({recentCount})</span>
           </button>
         )}
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '0.78rem',
-            color: 'var(--accent-emerald)',
-            background: 'rgba(16, 185, 129, 0.08)',
-            padding: '5px 10px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-          }}
-        >
-          <ShieldCheck size={15} />
-          <span>100% Client-Side • Bảo mật riêng tư</span>
-        </div>
 
         <button
           onClick={onToggleTheme}

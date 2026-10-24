@@ -1,21 +1,26 @@
 {
-  "name": "tool_pdf",
+  "name": "bcchub",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build:bento": "node scripts/build-bento.mjs",
+    "skin:pdf": "node scripts/skin-pdf-tools.mjs",
+    "sync:bento": "node scripts/sync-bento-catalog.mjs",
+    "build": "node scripts/build-bento.mjs && node scripts/skin-pdf-tools.mjs && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@phosphor-icons/web": "^2.1.2",
     "jszip": "^3.10.2",
     "lucide-react": "^1.45.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router": "^8.5.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
