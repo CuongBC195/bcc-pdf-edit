@@ -25,7 +25,7 @@ if (!fs.existsSync(path.join(BENTO, 'package.json'))) {
   });
 }
 
-// Đảm bảo bản vá ONLY_LANG trong generate-i18n-pages.mjs được áp dụng
+// Đảm bảo bản vá ONLY_LANG trong generate-i18n-pages.mjs và SKIP_COMPRESSION trong vite.config.ts
 const i18nScriptPath = path.join(BENTO, 'scripts/generate-i18n-pages.mjs');
 if (fs.existsSync(i18nScriptPath)) {
   const i18nSrc = fs.readFileSync(i18nScriptPath, 'utf8');
@@ -35,6 +35,18 @@ if (fs.existsSync(i18nScriptPath)) {
       `const onlyLangs = process.env.ONLY_LANG\n  ? new Set(['en', ...process.env.ONLY_LANG.split(',').map((s) => s.trim())])\n  : null;\n\nconst languages = fs.readdirSync(LOCALES_DIR).filter((file) => {\n  if (onlyLangs && !onlyLangs.has(file)) return false;`
     );
     fs.writeFileSync(i18nScriptPath, patched);
+  }
+}
+
+const bentoViteConfigPath = path.join(BENTO, 'vite.config.ts');
+if (fs.existsSync(bentoViteConfigPath)) {
+  const viteSrc = fs.readFileSync(bentoViteConfigPath, 'utf8');
+  if (!viteSrc.includes('SKIP_COMPRESSION')) {
+    const patched = viteSrc.replace(
+      /viteCompression\(\{[\s\S]*?deleteOriginFile:\s*false,\s*\}\),\s*viteCompression\(\{[\s\S]*?deleteOriginFile:\s*false,\s*\}\),/,
+      (match) => `...(process.env.SKIP_COMPRESSION === 'true' ? [] : [\n${match}\n]),`
+    );
+    fs.writeFileSync(bentoViteConfigPath, patched);
   }
 }
 
