@@ -16,13 +16,24 @@ const STAMP = path.join(DIST, '.bcc-build-stamp');
 const force = process.argv.includes('--force');
 
 // Tự động tải mã nguồn nhân PDF nếu chạy trên môi trường CI/Vercel mới clone
-if (!fs.existsSync(path.join(BENTO, 'package.json'))) {
+const wasClonedFresh = !fs.existsSync(path.join(BENTO, 'package.json'));
+if (wasClonedFresh) {
   console.log('▶ Đang tải nhân PDF cho bccHub (vendor/bentopdf)...');
-  fs.mkdirSync(path.dirname(BENTO), { recursive: true });
-  execSync('git clone --depth 1 https://github.com/alam00000/bentopdf.git vendor/bentopdf', {
-    cwd: ROOT,
+  fs.mkdirSync(BENTO, { recursive: true });
+  // Trên Vercel/CI, build cache có thể khôi phục sẵn thư mục vendor/bentopdf/node_modules
+  // khiến `git clone` báo lỗi exit code 128 ("destination path already exists and is not an empty directory").
+  // Dùng git init + fetch + checkout trực tiếp để tương thích cả khi thư mục đã có cache.
+  const gitDir = path.join(BENTO, '.git');
+  if (fs.existsSync(gitDir)) {
+    fs.rmSync(gitDir, { recursive: true, force: true });
+  }
+  execSync('git init -q', { cwd: BENTO, stdio: 'inherit' });
+  execSync('git remote add origin https://github.com/alam00000/bentopdf.git', {
+    cwd: BENTO,
     stdio: 'inherit',
   });
+  execSync('git fetch --depth 1 origin main', { cwd: BENTO, stdio: 'inherit' });
+  execSync('git checkout -f FETCH_HEAD', { cwd: BENTO, stdio: 'inherit' });
 }
 
 // Đảm bảo bản vá ONLY_LANG trong generate-i18n-pages.mjs và SKIP_COMPRESSION trong vite.config.ts
@@ -83,6 +94,8 @@ const run = (cmd) => {
 
 if (!fs.existsSync(path.join(BENTO, 'node_modules'))) {
   run('npm ci --ignore-scripts --no-audit --no-fund');
+} else if (wasClonedFresh) {
+  run('npm install --ignore-scripts --no-audit --no-fund --prefer-offline');
 }
 
 run('node scripts/generate-blog.mjs');
