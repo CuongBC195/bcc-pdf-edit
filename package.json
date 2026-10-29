@@ -9,6 +9,8 @@
     "skin:pdf": "node scripts/skin-pdf-tools.mjs",
     "sync:bento": "node scripts/sync-bento-catalog.mjs",
     "build": "node scripts/build-bento.mjs && node scripts/skin-pdf-tools.mjs && tsc -b && vite build",
+    "desktop:dev": "npx @tauri-apps/cli@2 dev",
+    "desktop:build": "npx @tauri-apps/cli@2 icon public/bcc-logo.svg && npx @tauri-apps/cli@2 build",
     "lint": "oxlint",
     "preview": "vite preview"
   },

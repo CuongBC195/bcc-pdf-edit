@@ -17,6 +17,7 @@ export interface SavedWorkspaceSession {
   activeRuleId: string | null;
   pageRotations: Record<number, number>;
   selectedPages: number[];
+  deletedPages?: number[];
   windowScrollY?: number;
   gridScrollTop?: number;
   lastUpdated: number;
@@ -104,7 +105,8 @@ export async function saveSessionToDb(
   pageRotations: Record<number, number>,
   selectedPages: number[],
   windowScrollY: number = 0,
-  gridScrollTop: number = 0
+  gridScrollTop: number = 0,
+  deletedPages: number[] = []
 ): Promise<void> {
   try {
     const db = await openDatabase();
@@ -147,6 +149,7 @@ export async function saveSessionToDb(
           activeRuleId,
           pageRotations,
           selectedPages,
+          deletedPages,
           windowScrollY,
           gridScrollTop,
           lastUpdated: Date.now(),
@@ -170,6 +173,7 @@ export async function saveSessionToDb(
             activeRuleId,
             pageRotations,
             selectedPages,
+            deletedPages,
             windowScrollY,
             gridScrollTop,
             lastUpdated: Date.now(),

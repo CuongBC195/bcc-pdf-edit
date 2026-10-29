@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Scissors, Eye, RotateCw, X, Plus } from 'lucide-react';
+import { Scissors, Eye, RotateCw, RotateCcw, Trash2, X, Plus } from 'lucide-react';
 import type { SplitRule, PDFPageThumbnail } from '../types/pdf';
 import { renderPageThumbnail } from '../services/thumbnailService';
 import { PageDetailModal } from './PageDetailModal';
@@ -9,6 +9,7 @@ interface VisualThumbnailGridProps {
   totalPageCount: number;
   rules: SplitRule[];
   selectedPages: number[];
+  deletedPages: number[];
   activeRuleId: string | null;
   hoveredRuleId: string | null;
   pageRotations: Record<number, number>;
@@ -17,6 +18,10 @@ interface VisualThumbnailGridProps {
   onDeselectAll: () => void;
   onCreateRuleFromSelected: () => void;
   onSplitAtPage: (pageNum: number) => void;
+  onDeletePage: (pageNum: number) => void;
+  onDeleteSelectedPages: () => void;
+  onRestorePage: (pageNum: number) => void;
+  onRestoreAllPages: () => void;
   onRotatePage: (pageNum: number) => void;
   onRotateAllPages: () => void;
   onResetRotations: () => void;
@@ -31,6 +36,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
   totalPageCount,
   rules,
   selectedPages,
+  deletedPages,
   activeRuleId,
   hoveredRuleId,
   pageRotations,
@@ -39,6 +45,10 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
   onDeselectAll,
   onCreateRuleFromSelected,
   onSplitAtPage,
+  onDeletePage,
+  onDeleteSelectedPages,
+  onRestorePage,
+  onRestoreAllPages,
   onRotatePage,
   onRotateAllPages,
   onResetRotations,
@@ -48,7 +58,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
   onSelectRule,
 }) => {
   const [thumbnails, setThumbnails] = useState<Record<number, PDFPageThumbnail>>({});
-  const [filterMode, setFilterMode] = useState<'all' | 'assigned' | 'unassigned'>('all');
+  const [filterMode, setFilterMode] = useState<'all' | 'assigned' | 'unassigned' | 'deleted'>('all');
   const [previewPage, setPreviewPage] = useState<number | null>(null);
 
   // Track hovered page when mouse moves over a row/card ("trỏ vô file đó")
@@ -58,6 +68,16 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
   const [focusedPage, setFocusedPage] = useState<number>(1);
 
   const gridContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const deletedSet = React.useMemo(() => new Set(deletedPages), [deletedPages]);
+
+  const activePageNumbers = React.useMemo(
+    () => Array.from({ length: totalPageCount }, (_, i) => i + 1).filter((p) => !deletedSet.has(p)),
+    [totalPageCount, deletedSet]
+  );
+
+  const effectiveFilterMode =
+    filterMode === 'deleted' && deletedPages.length === 0 ? 'all' : filterMode;
 
   // Quick Look spacebar preview & arrow key navigation like macOS Finder
   useEffect(() => {
@@ -163,28 +183,34 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
     };
   }, [sourceBuffer, totalPageCount]);
 
-  const assignedCount = Array.from(pageRuleMap.values()).filter((list) => list.length > 0).length;
-  const unassignedCount = totalPageCount - assignedCount;
+  const activeTotalCount = activePageNumbers.length;
+  const assignedCount = activePageNumbers.filter((p) => (pageRuleMap.get(p) || []).length > 0).length;
+  const unassignedCount = activeTotalCount - assignedCount;
   const rotatedPagesCount = Object.values(pageRotations).filter((r) => r % 360 !== 0).length;
 
   // Header checkbox state logic:
-  // When activeRule is set: check if all or some pages are in this active rule
-  // When no activeRule: check if all or some pages have been chosen ("đã chọn vô" / assigned or selected)
+  // When activeRule is set: check if all or some active pages are in this active rule
+  // When no activeRule: check if all or some active pages have been chosen ("đã chọn vô" / assigned or selected)
   const chosenCount = activeRule
-    ? activeRule.pages.length
-    : Array.from({ length: totalPageCount }, (_, i) => i + 1).filter(
+    ? activeRule.pages.filter((p) => !deletedSet.has(p)).length
+    : activePageNumbers.filter(
         (p) => (pageRuleMap.get(p) || []).length > 0 || selectedPages.includes(p)
       ).length;
 
-  const isHeaderChecked = totalPageCount > 0 && chosenCount === totalPageCount;
-  const isHeaderIndeterminate = chosenCount > 0 && chosenCount < totalPageCount;
+  const isHeaderChecked = activeTotalCount > 0 && chosenCount === activeTotalCount;
+  const isHeaderIndeterminate = chosenCount > 0 && chosenCount < activeTotalCount;
 
-  const filteredPages = Array.from({ length: totalPageCount }, (_, i) => i + 1).filter((p) => {
-    const isAssigned = (pageRuleMap.get(p) || []).length > 0;
-    if (filterMode === 'assigned') return isAssigned;
-    if (filterMode === 'unassigned') return !isAssigned;
-    return true;
-  });
+  const filteredPages = React.useMemo(() => {
+    if (effectiveFilterMode === 'deleted') {
+      return [...deletedPages].sort((a, b) => a - b);
+    }
+    return activePageNumbers.filter((p) => {
+      const isAssigned = (pageRuleMap.get(p) || []).length > 0;
+      if (effectiveFilterMode === 'assigned') return isAssigned;
+      if (effectiveFilterMode === 'unassigned') return !isAssigned;
+      return true;
+    });
+  }, [effectiveFilterMode, deletedPages, activePageNumbers, pageRuleMap]);
 
   return (
     <div
@@ -265,29 +291,67 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', padding: '2px', border: '1px solid var(--border-subtle)' }}>
             <button
-              className={`btn btn-sm ${filterMode === 'all' ? 'btn-secondary' : 'btn-ghost'}`}
+              className={`btn btn-sm ${effectiveFilterMode === 'all' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{ padding: '4px 10px', fontSize: '0.78rem' }}
               onClick={() => setFilterMode('all')}
             >
-              Tất cả ({totalPageCount})
+              Tất cả ({activeTotalCount})
             </button>
             <button
-              className={`btn btn-sm ${filterMode === 'assigned' ? 'btn-secondary' : 'btn-ghost'}`}
+              className={`btn btn-sm ${effectiveFilterMode === 'assigned' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{ padding: '4px 10px', fontSize: '0.78rem' }}
               onClick={() => setFilterMode('assigned')}
             >
               Đã gán ({assignedCount})
             </button>
             <button
-              className={`btn btn-sm ${filterMode === 'unassigned' ? 'btn-secondary' : 'btn-ghost'}`}
+              className={`btn btn-sm ${effectiveFilterMode === 'unassigned' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{ padding: '4px 10px', fontSize: '0.78rem' }}
               onClick={() => setFilterMode('unassigned')}
             >
               Chưa gán ({unassignedCount})
             </button>
+            {deletedPages.length > 0 && (
+              <button
+                className={`btn btn-sm ${effectiveFilterMode === 'deleted' ? 'btn-secondary' : 'btn-ghost'}`}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '0.78rem',
+                  color: effectiveFilterMode === 'deleted' ? 'var(--accent-rose)' : 'var(--text-muted)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onClick={() => setFilterMode('deleted')}
+                title="Xem danh sách các trang đã xóa / loại bỏ khỏi danh sách tách"
+              >
+                <Trash2 size={12} />
+                <span>Đã xóa ({deletedPages.length})</span>
+              </button>
+            )}
           </div>
 
-          {!activeRule && (
+          {effectiveFilterMode === 'deleted' && deletedPages.length > 0 && (
+            <button
+              type="button"
+              onClick={onRestoreAllPages}
+              className="btn btn-secondary btn-sm"
+              style={{
+                fontSize: '0.78rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                color: 'var(--accent-emerald)',
+                borderColor: 'rgba(16, 185, 129, 0.35)',
+              }}
+              title="Khôi phục toàn bộ các trang đã xóa về lại danh sách"
+            >
+              <RotateCcw size={13} />
+              <span>Khôi phục tất cả ({deletedPages.length})</span>
+            </button>
+          )}
+
+          {!activeRule && effectiveFilterMode !== 'deleted' && (
             <>
               <button onClick={onSelectAll} className="btn btn-ghost btn-sm" style={{ fontSize: '0.78rem' }}>
                 Chọn hết
@@ -325,25 +389,48 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {selectedPages.length > 0 && (
-            <button
-              onClick={onCreateRuleFromSelected}
-              className="btn btn-primary btn-sm animate-fade-in"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '5px 14px',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                boxShadow: '0 0 14px rgba(6, 182, 212, 0.4)',
-              }}
-              title="Cắt tách các trang đang chọn thành một file con mới"
-            >
-              <Scissors size={14} />
-              <span>Cắt {selectedPages.length} trang đã chọn thành File con</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onDeleteSelectedPages}
+                className="btn btn-secondary btn-sm animate-fade-in"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px 12px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: 'var(--accent-rose)',
+                  borderColor: 'rgba(244, 63, 94, 0.35)',
+                  background: 'rgba(244, 63, 94, 0.08)',
+                }}
+                title="Xóa các trang đang chọn khỏi danh sách (sẽ không bị dính khi tạo file con mới)"
+              >
+                <Trash2 size={13} />
+                <span>Xóa {selectedPages.length} trang đã chọn</span>
+              </button>
+
+              <button
+                onClick={onCreateRuleFromSelected}
+                className="btn btn-primary btn-sm animate-fade-in"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 14px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  boxShadow: '0 0 14px rgba(6, 182, 212, 0.4)',
+                }}
+                title="Cắt tách các trang đang chọn thành một file con mới"
+              >
+                <Scissors size={14} />
+                <span>Cắt {selectedPages.length} trang đã chọn thành File con</span>
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -370,7 +457,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '36px 55px 50px minmax(180px, 1fr) 70px 75px',
+              gridTemplateColumns: '36px 55px 50px minmax(180px, 1fr) 70px 106px',
               gap: '10px',
               alignItems: 'center',
               padding: '8px 12px',
@@ -393,6 +480,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   if (el) el.indeterminate = isHeaderIndeterminate;
                 }}
                 checked={isHeaderChecked}
+                disabled={effectiveFilterMode === 'deleted'}
                 onChange={() => {
                   if (isHeaderChecked) {
                     onDeselectAll();
@@ -406,7 +494,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                     : 'Bấm để chọn tất cả các trang'
                 }
                 style={{
-                  cursor: 'pointer',
+                  cursor: effectiveFilterMode === 'deleted' ? 'not-allowed' : 'pointer',
                   accentColor: activeRule ? activeRule.color : 'var(--accent-cyan)',
                   width: '15px',
                   height: '15px',
@@ -422,6 +510,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
 
           {/* Finder Table Rows */}
           {filteredPages.map((pageNum) => {
+            const isDeleted = deletedSet.has(pageNum);
             const isSelected = selectedPages.includes(pageNum);
             const assignedRules = pageRuleMap.get(pageNum) || [];
             const thumb = thumbnails[pageNum];
@@ -436,7 +525,7 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
             // Accurate, logical checkbox state:
             // - If activeRule is open: checked if page belongs to that active rule
             // - If no activeRule: checked if page is already assigned to a file ("đã chọn vô"), or is manually selected
-            const isPageChecked = activeRule ? isInActiveRule : (isAssigned || isSelected);
+            const isPageChecked = isDeleted ? false : activeRule ? isInActiveRule : (isAssigned || isSelected);
             const checkboxColor = activeRule
               ? activeRule.color
               : primaryRule
@@ -444,7 +533,9 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
               : 'var(--accent-cyan)';
 
             let rowBg = 'transparent';
-            if (activeRule && isInActiveRule) {
+            if (isDeleted) {
+              rowBg = 'rgba(244, 63, 94, 0.05)';
+            } else if (activeRule && isInActiveRule) {
               rowBg = `${activeRule.color}18`;
             } else if (hoveredRule && hoveredRule.pages.includes(pageNum)) {
               rowBg = `${hoveredRule.color}20`;
@@ -469,7 +560,9 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   }}
                   onClick={(e) => {
                     setFocusedPage(pageNum);
-                    onTogglePageSelect(pageNum, e.shiftKey);
+                    if (!isDeleted) {
+                      onTogglePageSelect(pageNum, e.shiftKey);
+                    }
                   }}
                   onDoubleClick={() => {
                     setFocusedPage(pageNum);
@@ -477,261 +570,266 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                   }}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '36px 55px 50px minmax(180px, 1fr) 70px 75px',
+                    gridTemplateColumns: '36px 55px 50px minmax(180px, 1fr) 70px 106px',
                     gap: '10px',
                     alignItems: 'center',
                     padding: '6px 12px',
                     borderBottom: '1px solid var(--border-subtle)',
-                  background: rowBg,
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  borderLeft: (activeRule && isInActiveRule)
-                    ? `4px solid ${activeRule.color}`
-                    : (hoveredRule && hoveredRule.pages.includes(pageNum))
-                    ? `4px solid ${hoveredRule.color}`
-                    : isSelected
-                    ? '4px solid var(--accent-cyan)'
-                    : primaryRule
-                    ? `4px solid ${primaryRule.color}`
-                    : isHovered
-                    ? '4px solid var(--accent-cyan)'
-                    : isFocused
-                    ? '4px solid var(--border-active)'
-                    : '4px solid transparent',
-                }}
-                className="finder-list-row"
-                title={`Trang #${pageNum} — Trỏ chuột & phím Space để xem trước pop up, nhấp đúp để mở`}
-              >
-                {/* 1. Checkbox */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <input
-                    type="checkbox"
-                    checked={isPageChecked}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      onTogglePageSelect(pageNum, false);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      cursor: 'pointer',
-                      width: '15px',
-                      height: '15px',
-                      accentColor: checkboxColor,
-                    }}
-                    title={
-                      activeRule
-                        ? isInActiveRule
-                          ? 'Bấm để bỏ trang này khỏi file đang chọn'
-                          : 'Bấm để thêm trang này vào file đang chọn'
-                        : isAssigned
-                        ? `Đã phân bổ vào File ${rules.findIndex((r) => r.id === primaryRule?.id) + 1} (${primaryRule?.name}). Bấm để bỏ chọn.`
-                        : isSelected
-                        ? 'Đang chọn trang này. Bấm để bỏ chọn.'
-                        : 'Bấm để chọn trang này'
-                    }
-                  />
-                </div>
-
-                {/* 2. Page Number */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontSize: '0.84rem', color: 'var(--text-main)', fontFamily: 'monospace' }}>
-                  <span>#{pageNum < 10 ? `0${pageNum}` : pageNum}</span>
-                </div>
-
-                {/* 3. Micro Thumbnail Preview */}
-                <div
-                  style={{
-                    width: '36px',
-                    height: '46px',
-                    background: '#ffffff',
-                    borderRadius: '3px',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.25)',
-                    border: '1px solid var(--border-subtle)',
-                    flexShrink: 0,
+                    background: rowBg,
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    opacity: isDeleted ? 0.72 : 1,
+                    borderLeft: isDeleted
+                      ? '4px solid var(--accent-rose)'
+                      : (activeRule && isInActiveRule)
+                      ? `4px solid ${activeRule.color}`
+                      : (hoveredRule && hoveredRule.pages.includes(pageNum))
+                      ? `4px solid ${hoveredRule.color}`
+                      : isSelected
+                      ? '4px solid var(--accent-cyan)'
+                      : primaryRule
+                      ? `4px solid ${primaryRule.color}`
+                      : isHovered
+                      ? '4px solid var(--accent-cyan)'
+                      : isFocused
+                      ? '4px solid var(--border-active)'
+                      : '4px solid transparent',
                   }}
+                  className="finder-list-row"
+                  title={`Trang #${pageNum} — Trỏ chuột & phím Space để xem trước pop up, nhấp đúp để mở`}
                 >
-                  {thumb?.dataUrl ? (
-                    <img
-                      src={thumb.dataUrl}
-                      alt={`Trang ${pageNum}`}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: 'contain',
-                        transform: `rotate(${rotation}deg)`,
+                  {/* 1. Checkbox */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={isPageChecked}
+                      disabled={isDeleted}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        if (!isDeleted) {
+                          onTogglePageSelect(pageNum, false);
+                        }
                       }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        cursor: isDeleted ? 'not-allowed' : 'pointer',
+                        width: '15px',
+                        height: '15px',
+                        accentColor: checkboxColor,
+                      }}
+                      title={
+                        isDeleted
+                          ? 'Trang này đã bị xóa khỏi danh sách. Hãy khôi phục nếu muốn chọn.'
+                          : activeRule
+                          ? isInActiveRule
+                            ? 'Bấm để bỏ trang này khỏi file đang chọn'
+                            : 'Bấm để thêm trang này vào file đang chọn'
+                          : isAssigned
+                          ? `Đã phân bổ vào File ${rules.findIndex((r) => r.id === primaryRule?.id) + 1} (${primaryRule?.name}). Bấm để bỏ chọn.`
+                          : isSelected
+                          ? 'Đang chọn trang này. Bấm để bỏ chọn.'
+                          : 'Bấm để chọn trang này'
+                      }
                     />
-                  ) : (
-                    <div style={{ width: '12px', height: '12px', border: '1.5px solid var(--accent-cyan)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                  )}
-                </div>
+                  </div>
 
-                {/* 4. Child Rule Assignment Status - Always preserves existing file colors */}
-                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
-                  {activeRule ? (
-                    isInActiveRule ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                        <span
-                          className="badge"
-                          style={{
-                            background: `${activeRule.color}25`,
-                            color: activeRule.color,
-                            border: `1.5px solid ${activeRule.color}`,
-                            fontSize: '0.74rem',
-                            fontWeight: 700,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            boxShadow: `0 0 8px ${activeRule.color}35`,
-                          }}
-                        >
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-                          <span>Thuộc file này (Bấm bỏ)</span>
-                        </span>
-                        {assignedRules
-                          .filter((r) => r.id !== activeRule.id)
-                          .map((rule) => {
-                            const rIdx = rules.findIndex((r) => r.id === rule.id);
-                            return (
-                              <span
-                                key={rule.id}
-                                className="badge"
-                                style={{
-                                  background: `${rule.color}15`,
-                                  color: rule.color,
-                                  border: `1px solid ${rule.color}45`,
-                                  fontSize: '0.72rem',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                }}
-                              >
-                                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-                                <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
-                              </span>
-                            );
-                          })}
-                        <span
-                          style={{
-                            fontSize: '0.72rem',
-                            color: 'var(--text-muted)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '3px',
-                            padding: '1px 6px',
-                            borderRadius: '4px',
-                            background: 'var(--bg-surface)',
-                            border: '1px dashed var(--border-medium)',
-                          }}
-                        >
-                          <Plus size={11} style={{ color: activeRule.color }} />
-                          <span>(Thêm vào file này)</span>
-                        </span>
-                      </div>
+                  {/* 2. Page Number */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontWeight: 700,
+                      fontSize: '0.84rem',
+                      color: isDeleted ? 'var(--accent-rose)' : 'var(--text-main)',
+                      textDecoration: isDeleted ? 'line-through' : 'none',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    <span>#{pageNum < 10 ? `0${pageNum}` : pageNum}</span>
+                  </div>
+
+                  {/* 3. Micro Thumbnail Preview */}
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '46px',
+                      background: '#ffffff',
+                      borderRadius: '3px',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.25)',
+                      border: '1px solid var(--border-subtle)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {thumb?.dataUrl ? (
+                      <img
+                        src={thumb.dataUrl}
+                        alt={`Trang ${pageNum}`}
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'contain',
+                          transform: `rotate(${rotation}deg)`,
+                        }}
+                      />
                     ) : (
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <Plus size={11} style={{ color: activeRule.color }} />
-                        <span>Chưa gán • Bấm để thêm vào file này</span>
+                      <div style={{ width: '12px', height: '12px', border: '1.5px solid var(--accent-cyan)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                    )}
+                  </div>
+
+                  {/* 4. Child Rule Assignment Status - Always preserves existing file colors */}
+                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
+                    {isDeleted ? (
+                      <span
+                        className="badge"
+                        style={{
+                          background: 'rgba(244, 63, 94, 0.12)',
+                          color: 'var(--accent-rose)',
+                          border: '1px solid rgba(244, 63, 94, 0.35)',
+                          fontSize: '0.73rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Đã xóa khỏi danh sách (Bỏ qua khi tách)
                       </span>
-                    )
-                  ) : assignedRules.length > 0 ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      {assignedRules.map((rule) => {
-                        const rIdx = rules.findIndex((r) => r.id === rule.id);
-                        return (
-                          <button
-                            type="button"
-                            key={rule.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (onSelectRule) onSelectRule(rule.id);
-                            }}
+                    ) : activeRule ? (
+                      isInActiveRule ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span
                             className="badge"
                             style={{
-                              background: `${rule.color}20`,
-                              color: rule.color,
-                              border: `1.5px solid ${rule.color}55`,
+                              background: `${activeRule.color}25`,
+                              color: activeRule.color,
+                              border: `1.5px solid ${activeRule.color}`,
                               fontSize: '0.74rem',
                               fontWeight: 700,
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '5px',
-                              cursor: 'pointer',
+                              boxShadow: `0 0 8px ${activeRule.color}35`,
                             }}
-                            title={`Bấm để chọn và chỉnh sửa File ${rIdx + 1}: ${rule.name}`}
                           >
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-                            <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
-                      Chưa gán file con
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                            <span>Thuộc file này (Bấm bỏ)</span>
+                          </span>
+                          {assignedRules
+                            .filter((r) => r.id !== activeRule.id)
+                            .map((rule) => {
+                              const rIdx = rules.findIndex((r) => r.id === rule.id);
+                              return (
+                                <span
+                                  key={rule.id}
+                                  className="badge"
+                                  style={{
+                                    background: `${rule.color}15`,
+                                    color: rule.color,
+                                    border: `1px solid ${rule.color}45`,
+                                    fontSize: '0.72rem',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                  }}
+                                >
+                                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                                  <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
+                                </span>
+                              );
+                            })}
+                          <span
+                            style={{
+                              fontSize: '0.72rem',
+                              color: 'var(--text-muted)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              background: 'var(--bg-surface)',
+                              border: '1px dashed var(--border-medium)',
+                            }}
+                          >
+                            <Plus size={11} style={{ color: activeRule.color }} />
+                            <span>(Thêm vào file này)</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Plus size={11} style={{ color: activeRule.color }} />
+                          <span>Chưa gán • Bấm để thêm vào file này</span>
+                        </span>
+                      )
+                    ) : assignedRules.length > 0 ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        {assignedRules.map((rule) => {
+                          const rIdx = rules.findIndex((r) => r.id === rule.id);
+                          return (
+                            <button
+                              type="button"
+                              key={rule.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onSelectRule) onSelectRule(rule.id);
+                              }}
+                              className="badge"
+                              style={{
+                                background: `${rule.color}20`,
+                                color: rule.color,
+                                border: `1.5px solid ${rule.color}55`,
+                                fontSize: '0.74rem',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                cursor: 'pointer',
+                              }}
+                              title={`Bấm để chọn và chỉnh sửa File ${rIdx + 1}: ${rule.name}`}
+                            >
+                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                              <span>File {rIdx + 1}: {rule.name.split('/').pop()}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
+                        Chưa gán file con
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 5. Rotation */}
+                  <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '0.74rem', color: rotation > 0 ? 'var(--accent-amber)' : 'var(--text-muted)', fontWeight: rotation > 0 ? 700 : 400 }}>
+                      {rotation}°
                     </span>
-                  )}
-                </div>
-
-                {/* 5. Rotation */}
-                <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '0.74rem', color: rotation > 0 ? 'var(--accent-amber)' : 'var(--text-muted)', fontWeight: rotation > 0 ? 700 : 400 }}>
-                    {rotation}°
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRotatePage(pageNum);
-                    }}
-                    className="btn btn-ghost btn-sm"
-                    style={{ padding: '2px 4px', fontSize: '0.7rem', color: 'var(--text-muted)' }}
-                    data-tooltip={`Xoay trang #${pageNum} 90°`}
-                  >
-                    <RotateCw size={12} />
-                  </button>
-                </div>
-
-                {/* 6. Action Tools (Icon-only: Quick Look + Cut Here) */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFocusedPage(pageNum);
-                      setPreviewPage(pageNum);
-                    }}
-                    className="btn btn-ghost btn-sm"
-                    style={{
-                      width: '28px',
-                      height: '26px',
-                      padding: 0,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: isHovered ? 'var(--accent-cyan)' : 'var(--text-dim)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'var(--bg-card)',
-                      transition: 'all 0.15s ease',
-                    }}
-                    data-tooltip="Xem trước pop-up [Space]"
-                    data-tooltip-pos="left"
-                  >
-                    <Eye size={13} />
-                  </button>
-
-                  {pageNum < totalPageCount ? (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSplitAtPage(pageNum);
+                        onRotatePage(pageNum);
                       }}
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '2px 4px', fontSize: '0.7rem', color: 'var(--text-muted)' }}
+                      data-tooltip={`Xoay trang #${pageNum} 90°`}
+                    >
+                      <RotateCw size={12} />
+                    </button>
+                  </div>
+
+                  {/* 6. Action Tools (Quick Look + Cut Here + Delete/Restore) */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFocusedPage(pageNum);
+                        setPreviewPage(pageNum);
+                      }}
+                      className="btn btn-ghost btn-sm"
                       style={{
                         width: '28px',
                         height: '26px',
@@ -739,69 +837,151 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: 'var(--accent-cyan)',
-                        border: '1px solid rgba(6, 182, 212, 0.45)',
-                        background: isHovered ? 'rgba(6, 182, 212, 0.2)' : 'rgba(6, 182, 212, 0.09)',
+                        color: isHovered ? 'var(--accent-cyan)' : 'var(--text-dim)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: 'var(--radius-sm)',
-                        boxShadow: isHovered ? '0 0 10px rgba(6, 182, 212, 0.25)' : 'none',
+                        background: 'var(--bg-card)',
                         transition: 'all 0.15s ease',
                       }}
-                      data-tooltip={`Cắt tách file mới sau trang #${pageNum}`}
+                      data-tooltip="Xem trước pop-up [Space]"
                       data-tooltip-pos="left"
                     >
-                      <Scissors size={13} />
+                      <Eye size={13} />
                     </button>
-                  ) : (
-                    <div style={{ width: '28px' }} />
-                  )}
-                </div>
-              </div>
 
-              {/* Interactive Cut Separator Line between rows (delays 0.3s on hover) */}
-              {pageNum < totalPageCount && (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSplitAtPage(pageNum);
-                  }}
-                  className="split-cut-divider"
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '20px',
-                      right: '20px',
-                      height: '1px',
-                      background: 'var(--accent-cyan)',
-                      borderTop: '1px dashed var(--accent-cyan)',
-                      boxShadow: '0 0 6px rgba(6, 182, 212, 0.6)',
-                    }}
-                  />
-                  <span
-                    style={{
-                      position: 'relative',
-                      zIndex: 9,
-                      background: 'var(--bg-surface-elevated)',
-                      border: '1px solid var(--accent-cyan)',
-                      borderRadius: '12px',
-                      padding: '1px 9px',
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      color: 'var(--accent-cyan)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      boxShadow: '0 2px 8px rgba(6, 182, 212, 0.35)',
-                    }}
-                  >
-                    <Scissors size={11} />
-                    <span>Cắt giữa trang #{pageNum} & #{pageNum + 1}</span>
-                  </span>
+                    {isDeleted ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRestorePage(pageNum);
+                        }}
+                        className="btn btn-secondary btn-sm"
+                        style={{
+                          width: '28px',
+                          height: '26px',
+                          padding: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--accent-emerald)',
+                          border: '1px solid rgba(16, 185, 129, 0.45)',
+                          background: 'rgba(16, 185, 129, 0.12)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                        data-tooltip={`Khôi phục trang #${pageNum}`}
+                        data-tooltip-pos="left"
+                      >
+                        <RotateCcw size={13} />
+                      </button>
+                    ) : (
+                      <>
+                        {pageNum < totalPageCount ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSplitAtPage(pageNum);
+                            }}
+                            className="btn btn-secondary btn-sm"
+                            style={{
+                              width: '28px',
+                              height: '26px',
+                              padding: 0,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'var(--accent-cyan)',
+                              border: '1px solid rgba(6, 182, 212, 0.45)',
+                              background: isHovered ? 'rgba(6, 182, 212, 0.2)' : 'rgba(6, 182, 212, 0.09)',
+                              borderRadius: 'var(--radius-sm)',
+                              boxShadow: isHovered ? '0 0 10px rgba(6, 182, 212, 0.25)' : 'none',
+                              transition: 'all 0.15s ease',
+                            }}
+                            data-tooltip={`Cắt tách file mới sau trang #${pageNum}`}
+                            data-tooltip-pos="left"
+                          >
+                            <Scissors size={13} />
+                          </button>
+                        ) : (
+                          <div style={{ width: '28px' }} />
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeletePage(pageNum);
+                          }}
+                          className="btn btn-ghost btn-sm"
+                          style={{
+                            width: '28px',
+                            height: '26px',
+                            padding: 0,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: isHovered ? 'var(--accent-rose)' : 'var(--text-dim)',
+                            border: isHovered ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid var(--border-subtle)',
+                            background: isHovered ? 'rgba(244, 63, 94, 0.1)' : 'var(--bg-card)',
+                            borderRadius: 'var(--radius-sm)',
+                            transition: 'all 0.15s ease',
+                          }}
+                          data-tooltip={`Xóa trang #${pageNum} khỏi danh sách`}
+                          data-tooltip-pos="left"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              )}
-            </React.Fragment>
-          );
-        })}
+
+                {/* Interactive Cut Separator Line between rows (delays 0.3s on hover) */}
+                {!isDeleted && pageNum < totalPageCount && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSplitAtPage(pageNum);
+                    }}
+                    className="split-cut-divider"
+                  >
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '20px',
+                        right: '20px',
+                        height: '1px',
+                        background: 'var(--accent-cyan)',
+                        borderTop: '1px dashed var(--accent-cyan)',
+                        boxShadow: '0 0 6px rgba(6, 182, 212, 0.6)',
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: 'relative',
+                        zIndex: 9,
+                        background: 'var(--bg-surface-elevated)',
+                        border: '1px solid var(--accent-cyan)',
+                        borderRadius: '12px',
+                        padding: '1px 9px',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        color: 'var(--accent-cyan)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        boxShadow: '0 2px 8px rgba(6, 182, 212, 0.35)',
+                      }}
+                    >
+                      <Scissors size={11} />
+                      <span>Cắt giữa trang #{pageNum} & #{pageNum + 1}</span>
+                    </span>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         {/* High-Resolution Large Page Preview Modal with Zoom and Navigation */}
@@ -814,6 +994,18 @@ export const VisualThumbnailGrid: React.FC<VisualThumbnailGridProps> = ({
           pageRotations={pageRotations}
           initialThumbnailUrl={thumbnails[previewPage]?.dataUrl}
           onRotatePage={onRotatePage}
+          onDeletePage={(p) => {
+            onDeletePage(p);
+            const remaining = activePageNumbers.filter((num) => num !== p);
+            if (remaining.length === 0) {
+              setPreviewPage(null);
+            } else {
+              const nextAfter = remaining.find((num) => num > p);
+              const target = nextAfter !== undefined ? nextAfter : remaining[remaining.length - 1];
+              setFocusedPage(target);
+              setPreviewPage(target);
+            }
+          }}
           onNavigatePage={(newPage) => {
             setFocusedPage(newPage);
             setPreviewPage(newPage);

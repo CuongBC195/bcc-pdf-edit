@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { FolderOpen, Clock, Zap } from 'lucide-react';
+import { LauncherEmbedContext } from './hub/LauncherEmbedContext';
 import type { PDFMetadata, SplitRule, PDFBookmarkItem, ExportProgress } from './types/pdf';
 import { PRESET_COLORS } from './types/pdf';
 import { Header } from './components/Header';
@@ -22,7 +23,8 @@ import {
   setDefaultNamingDigits,
 } from './utils/pageUtils';
 import { extractBookmarks, resetPdfDocumentCache } from './services/thumbnailService';
-import { executeMultiSplit } from './services/pdfService';
+import { executeMultiSplit, loadPdfMetadata } from './services/pdfService';
+import { consumePendingContextFile } from './utils/contextFileStore';
 import { downloadAsZip } from './services/exportService';
 import {
   saveSessionToDb,
@@ -38,6 +40,7 @@ import { RecentFilesList } from './components/RecentFilesList';
 import { DetailedAlertModal, type DetailedAlertData } from './components/DetailedAlertModal';
 
 export const App: React.FC = () => {
+  const isEmbedded = useContext(LauncherEmbedContext);
   // Default to Light mode, but respect user's saved preference in localStorage
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('bccpdf_theme');
@@ -48,6 +51,7 @@ export const App: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<PDFBookmarkItem[]>([]);
   const [rules, setRules] = useState<SplitRule[]>([]);
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
+  const [deletedPages, setDeletedPages] = useState<number[]>([]);
   const [activeRuleId, setActiveRuleId] = useState<string | null>(null);
   const [hoveredRuleId, setHoveredRuleId] = useState<string | null>(null);
   const [pageRotations, setPageRotations] = useState<Record<number, number>>({});
@@ -96,6 +100,16 @@ export const App: React.FC = () => {
       try {
         await refreshRecentFiles();
 
+        // Nếu người dùng vừa trỏ vào 1 tệp PDF từ Raycast Launcher (Alt+Space) -> nạp thẳng tệp đó!
+        const contextPdf = consumePendingContextFile(/\.pdf$/i);
+        if (contextPdf && !isCancelled) {
+          const meta = await loadPdfMetadata(contextPdf);
+          if (!isCancelled) {
+            await handlePdfLoaded(meta);
+          }
+          return;
+        }
+
         const session = await loadSessionFromDb();
         if (!isCancelled && session && session.pdfMeta && session.pdfMeta.arrayBuffer) {
           resetPdfDocumentCache();
@@ -104,6 +118,7 @@ export const App: React.FC = () => {
           setActiveRuleId(session.activeRuleId || null);
           setPageRotations(session.pageRotations || {});
           setSelectedPages(session.selectedPages || []);
+          setDeletedPages(session.deletedPages || []);
 
           if (session.gridScrollTop && session.gridScrollTop > 0) {
             setInitialGridScrollTop(session.gridScrollTop);
@@ -147,18 +162,20 @@ export const App: React.FC = () => {
           pageRotations,
           selectedPages,
           windowScroll,
-          gridScrollTop
+          gridScrollTop,
+          deletedPages
         );
         refreshRecentFiles();
       }, 400);
     }
-  }, [pdfMeta, rules, activeRuleId, pageRotations, selectedPages, gridScrollTop, refreshRecentFiles]);
+  }, [pdfMeta, rules, activeRuleId, pageRotations, selectedPages, deletedPages, gridScrollTop, refreshRecentFiles]);
 
   // Setup rules when new PDF is loaded
   const handlePdfLoaded = async (meta: PDFMetadata) => {
     resetPdfDocumentCache();
     setPdfMeta(meta);
     setSelectedPages([]);
+    setDeletedPages([]);
     setActiveRuleId(null);
     setHoveredRuleId(null);
     setPageRotations({});
@@ -173,15 +190,16 @@ export const App: React.FC = () => {
 
       // Check if this file was previously opened so we restore its child rules
       const existingSession = await loadRecentFileSession(meta.name);
-      if (existingSession && existingSession.rules && existingSession.rules.length > 0) {
-        setRules(existingSession.rules);
+      if (existingSession && ((existingSession.rules && existingSession.rules.length > 0) || (existingSession.deletedPages && existingSession.deletedPages.length > 0))) {
+        setRules(existingSession.rules || []);
         setActiveRuleId(existingSession.activeRuleId || null);
         setPageRotations(existingSession.pageRotations || {});
         setSelectedPages(existingSession.selectedPages || []);
+        setDeletedPages(existingSession.deletedPages || []);
       } else {
         setRules([]);
         // Save session immediately to IndexedDB
-        await saveSessionToDb(meta, [], null, {}, [], 0, 0);
+        await saveSessionToDb(meta, [], null, {}, [], 0, 0, []);
       }
       await refreshRecentFiles();
     } catch (err) {
@@ -202,7 +220,8 @@ export const App: React.FC = () => {
         pageRotations,
         selectedPages,
         window.scrollY || 0,
-        gridScrollTop
+        gridScrollTop,
+        deletedPages
       );
     }
     resetPdfDocumentCache();
@@ -211,6 +230,7 @@ export const App: React.FC = () => {
     setRules([]);
     setBookmarks([]);
     setSelectedPages([]);
+    setDeletedPages([]);
     setActiveRuleId(null);
     setHoveredRuleId(null);
     setPageRotations({});
@@ -232,6 +252,7 @@ export const App: React.FC = () => {
         setActiveRuleId(session.activeRuleId || null);
         setPageRotations(session.pageRotations || {});
         setSelectedPages(session.selectedPages || []);
+        setDeletedPages(session.deletedPages || []);
 
         if (session.gridScrollTop && session.gridScrollTop > 0) {
           setInitialGridScrollTop(session.gridScrollTop);
@@ -283,6 +304,7 @@ export const App: React.FC = () => {
         setRules([]);
         setBookmarks([]);
         setSelectedPages([]);
+        setDeletedPages([]);
         setActiveRuleId(null);
         setHoveredRuleId(null);
         setPageRotations({});
@@ -293,6 +315,56 @@ export const App: React.FC = () => {
     }
   };
 
+  // Delete / Exclude page from page list so new child rules never include or jump back to it
+  const handleDeletePage = useCallback((pageNum: number) => {
+    setDeletedPages((prev) => (prev.includes(pageNum) ? prev : [...prev, pageNum].sort((a, b) => a - b)));
+    setSelectedPages((prev) => prev.filter((p) => p !== pageNum));
+    setRules((prev) =>
+      prev.map((r) => {
+        if (!r.pages.includes(pageNum)) return r;
+        const newPages = r.pages.filter((p) => p !== pageNum);
+        const newRangeStr = formatPagesToRange(newPages);
+        return {
+          ...r,
+          pages: newPages,
+          pageRangeStr: newRangeStr,
+          isValid: newPages.length > 0,
+          errorMsg: newPages.length === 0 ? 'File chưa chọn trang nào' : undefined,
+        };
+      })
+    );
+  }, []);
+
+  const handleDeleteSelectedPages = useCallback(() => {
+    if (selectedPages.length === 0) return;
+    const toDeleteSet = new Set(selectedPages);
+    setDeletedPages((prev) => Array.from(new Set([...prev, ...selectedPages])).sort((a, b) => a - b));
+    setRules((prev) =>
+      prev.map((r) => {
+        if (!r.pages.some((p) => toDeleteSet.has(p))) return r;
+        const newPages = r.pages.filter((p) => !toDeleteSet.has(p));
+        const newRangeStr = formatPagesToRange(newPages);
+        return {
+          ...r,
+          pages: newPages,
+          pageRangeStr: newRangeStr,
+          isValid: newPages.length > 0,
+          errorMsg: newPages.length === 0 ? 'File chưa chọn trang nào' : undefined,
+        };
+      })
+    );
+    setSelectedPages([]);
+    setLastClickedPage(null);
+  }, [selectedPages]);
+
+  const handleRestorePage = useCallback((pageNum: number) => {
+    setDeletedPages((prev) => prev.filter((p) => p !== pageNum));
+  }, []);
+
+  const handleRestoreAllPages = useCallback(() => {
+    setDeletedPages([]);
+  }, []);
+
   // Page selection logic:
   // - If activeRuleId is selected: Clicking a page directly adds/removes it from that active rule!
   // - If no activeRuleId:
@@ -300,6 +372,8 @@ export const App: React.FC = () => {
   //    + If page is unassigned: toggles page in selectedPages for multi-selection
   const handleTogglePageSelect = useCallback(
     (pageNum: number, isShift: boolean) => {
+      if (deletedPages.includes(pageNum)) return;
+
       if (activeRuleId) {
         setRules((prev) =>
           prev.map((r) => {
@@ -345,9 +419,12 @@ export const App: React.FC = () => {
       if (isShift && lastClickedPage !== null) {
         const start = Math.min(lastClickedPage, pageNum);
         const end = Math.max(lastClickedPage, pageNum);
+        const deletedSet = new Set(deletedPages);
         const range: number[] = [];
         for (let p = start; p <= end; p++) {
-          range.push(p);
+          if (!deletedSet.has(p)) {
+            range.push(p);
+          }
         }
         setSelectedPages((prev) => Array.from(new Set([...prev, ...range])).sort((a, b) => a - b));
       } else {
@@ -361,12 +438,15 @@ export const App: React.FC = () => {
         setLastClickedPage(pageNum);
       }
     },
-    [activeRuleId, lastClickedPage, rules]
+    [activeRuleId, lastClickedPage, rules, deletedPages]
   );
 
   const handleSelectAll = useCallback(() => {
     if (!pdfMeta) return;
-    const allPages = Array.from({ length: pdfMeta.pageCount }, (_, i) => i + 1);
+    const deletedSet = new Set(deletedPages);
+    const allPages = Array.from({ length: pdfMeta.pageCount }, (_, i) => i + 1).filter(
+      (p) => !deletedSet.has(p)
+    );
     if (activeRuleId) {
       setRules((prev) =>
         prev.map((r) =>
@@ -375,8 +455,8 @@ export const App: React.FC = () => {
                 ...r,
                 pages: allPages,
                 pageRangeStr: formatPagesToRange(allPages),
-                isValid: true,
-                errorMsg: undefined,
+                isValid: allPages.length > 0,
+                errorMsg: allPages.length === 0 ? 'File chưa chọn trang nào' : undefined,
               }
             : r
         )
@@ -384,7 +464,7 @@ export const App: React.FC = () => {
       return;
     }
     setSelectedPages(allPages);
-  }, [pdfMeta, activeRuleId]);
+  }, [pdfMeta, activeRuleId, deletedPages]);
 
   const handleDeselectAll = useCallback(() => {
     if (activeRuleId) {
@@ -504,34 +584,42 @@ export const App: React.FC = () => {
   const handleSplitAtPage = (pageNum: number) => {
     if (!pdfMeta || pageNum >= pdfMeta.pageCount) return;
 
+    const deletedSet = new Set(deletedPages);
     const pageA = pageNum;
     const pageB = pageNum + 1;
 
     // Case 1: When no rules exist yet -> Split entire document into 2 files at this cut point!
     if (rules.length === 0) {
-      const pagesA = Array.from({ length: pageA }, (_, i) => i + 1);
-      const pagesB = Array.from({ length: pdfMeta.pageCount - pageA }, (_, i) => pageA + 1 + i);
+      const pagesA = Array.from({ length: pageA }, (_, i) => i + 1).filter((p) => !deletedSet.has(p));
+      const pagesB = Array.from({ length: pdfMeta.pageCount - pageA }, (_, i) => pageA + 1 + i).filter(
+        (p) => !deletedSet.has(p)
+      );
 
-      const newRules: SplitRule[] = [
-        {
+      const newRules: SplitRule[] = [];
+      if (pagesA.length > 0) {
+        newRules.push({
           id: `rule_${Date.now()}_1`,
           name: generateNewRuleName(0, pagesA),
           pageRangeStr: formatPagesToRange(pagesA),
           pages: pagesA,
           color: PRESET_COLORS[0],
           isValid: true,
-        },
-        {
+        });
+      }
+      if (pagesB.length > 0) {
+        newRules.push({
           id: `rule_${Date.now()}_2`,
-          name: generateNewRuleName(1, pagesB),
+          name: generateNewRuleName(newRules.length, pagesB),
           pageRangeStr: formatPagesToRange(pagesB),
           pages: pagesB,
-          color: PRESET_COLORS[1],
+          color: PRESET_COLORS[newRules.length],
           isValid: true,
-        },
-      ];
-      setRules(newRules);
-      setActiveRuleId(newRules[1].id);
+        });
+      }
+      if (newRules.length > 0) {
+        setRules(newRules);
+        setActiveRuleId(newRules[newRules.length - 1].id);
+      }
       return;
     }
 
@@ -550,8 +638,8 @@ export const App: React.FC = () => {
 
     if (targetRuleIndex !== -1) {
       const oldRule = rules[targetRuleIndex];
-      const pagesA = oldRule.pages.filter((p) => p <= pageA);
-      const pagesB = oldRule.pages.filter((p) => p >= pageB);
+      const pagesA = oldRule.pages.filter((p) => p <= pageA && !deletedSet.has(p));
+      const pagesB = oldRule.pages.filter((p) => p >= pageB && !deletedSet.has(p));
 
       const ruleA: SplitRule = {
         ...oldRule,
@@ -608,7 +696,9 @@ export const App: React.FC = () => {
       const pagesB: number[] = [];
       for (let p = pageB; p <= pdfMeta.pageCount; p++) {
         if (assignedPages.has(p)) break;
-        pagesB.push(p);
+        if (!deletedSet.has(p)) {
+          pagesB.push(p);
+        }
       }
 
       if (pagesB.length > 0) {
@@ -647,7 +737,7 @@ export const App: React.FC = () => {
       }
       const pagesA: number[] = [];
       for (let p = startPage; p <= pageA; p++) {
-        if (!assignedPages.has(p)) pagesA.push(p);
+        if (!assignedPages.has(p) && !deletedSet.has(p)) pagesA.push(p);
       }
 
       if (pagesA.length > 0) {
@@ -682,14 +772,38 @@ export const App: React.FC = () => {
     const nextIdx = rules.length + 1;
     const color = PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length];
 
-    const allAssigned = new Set(rules.flatMap((r) => r.pages));
-    let suggestedPage = 1;
-    for (let p = 1; p <= pdfMeta.pageCount; p++) {
-      if (!allAssigned.has(p)) {
+    const allAssignedList = rules.flatMap((r) => r.pages);
+    const allAssigned = new Set(allAssignedList);
+    const deletedSet = new Set(deletedPages);
+    const maxAssignedPage = allAssignedList.length > 0 ? Math.max(...allAssignedList) : 0;
+
+    let suggestedPage: number | null = null;
+    // 1. Prefer first unassigned, non-deleted page AFTER the highest assigned page
+    for (let p = maxAssignedPage + 1; p <= pdfMeta.pageCount; p++) {
+      if (!allAssigned.has(p) && !deletedSet.has(p)) {
         suggestedPage = p;
         break;
       }
     }
+    // 2. Fallback: first unassigned, non-deleted page from page 1
+    if (suggestedPage === null) {
+      for (let p = 1; p <= pdfMeta.pageCount; p++) {
+        if (!allAssigned.has(p) && !deletedSet.has(p)) {
+          suggestedPage = p;
+          break;
+        }
+      }
+    }
+    // 3. Final fallback if all pages are assigned
+    if (suggestedPage === null) {
+      for (let p = 1; p <= pdfMeta.pageCount; p++) {
+        if (!deletedSet.has(p)) {
+          suggestedPage = p;
+          break;
+        }
+      }
+    }
+    if (suggestedPage === null) suggestedPage = 1;
 
     let idxToUse = rules.length;
     let candidateName = generateNewRuleName(idxToUse, [suggestedPage]);
@@ -762,6 +876,7 @@ export const App: React.FC = () => {
   // Quick Presets
   const generateRulesFromBookmarks = (bms: PDFBookmarkItem[], totalPages: number) => {
     if (bms.length === 0) return;
+    const deletedSet = new Set(deletedPages);
     const newRules: SplitRule[] = [];
 
     for (let i = 0; i < bms.length; i++) {
@@ -772,8 +887,11 @@ export const App: React.FC = () => {
 
       const pageList: number[] = [];
       for (let p = startPage; p <= endPage; p++) {
-        pageList.push(p);
+        if (!deletedSet.has(p)) {
+          pageList.push(p);
+        }
       }
+      if (pageList.length === 0) continue;
 
       let titleClean = (curr.title || `Muc_${i + 1}`).replace(/[<>:"/\\|?*]/g, '_').trim();
       if (!titleClean.toLowerCase().endsWith('.pdf')) {
@@ -795,21 +913,19 @@ export const App: React.FC = () => {
 
   const handleSplitEveryNPages = (n: number) => {
     if (!pdfMeta || n < 1) return;
+    const deletedSet = new Set(deletedPages);
+    const activePages = Array.from({ length: pdfMeta.pageCount }, (_, i) => i + 1).filter(
+      (p) => !deletedSet.has(p)
+    );
     const newRules: SplitRule[] = [];
-    const total = pdfMeta.pageCount;
     let idx = 1;
 
-    for (let p = 1; p <= total; p += n) {
-      const end = Math.min(p + n - 1, total);
-      const pageList: number[] = [];
-      for (let k = p; k <= end; k++) {
-        pageList.push(k);
-      }
-
+    for (let i = 0; i < activePages.length; i += n) {
+      const pageList = activePages.slice(i, i + n);
       newRules.push({
         id: `rule_n_${idx}`,
         name: generateNewRuleName(idx - 1, pageList),
-        pageRangeStr: `${p}-${end}`,
+        pageRangeStr: formatPagesToRange(pageList),
         pages: pageList,
         color: PRESET_COLORS[(idx - 1) % PRESET_COLORS.length],
         isValid: true,
@@ -822,16 +938,20 @@ export const App: React.FC = () => {
 
   const handleSplitEveryPage = () => {
     if (!pdfMeta) return;
+    const deletedSet = new Set(deletedPages);
     const newRules: SplitRule[] = [];
+    let idx = 0;
     for (let p = 1; p <= pdfMeta.pageCount; p++) {
+      if (deletedSet.has(p)) continue;
       newRules.push({
         id: `rule_single_${p}`,
-        name: generateNewRuleName(p - 1, [p]),
+        name: generateNewRuleName(idx, [p]),
         pageRangeStr: `${p}`,
         pages: [p],
-        color: PRESET_COLORS[(p - 1) % PRESET_COLORS.length],
+        color: PRESET_COLORS[idx % PRESET_COLORS.length],
         isValid: true,
       });
+      idx++;
     }
     setRules(newRules);
   };
@@ -1008,26 +1128,36 @@ export const App: React.FC = () => {
       pageRotations,
       selectedPages,
       windowScroll,
-      gridScrollTop
+      gridScrollTop,
+      deletedPages
     );
     await refreshRecentFiles();
   };
 
   const validRules = rules.filter((r) => r.isValid && r.pages.length > 0);
   const totalAssignedPages = rules.reduce((acc, r) => (r.isValid ? acc + r.pages.length : acc), 0);
-  const uniqueAssignedPages = new Set(rules.filter((r) => r.isValid).flatMap((r) => r.pages)).size;
-  const unassignedPagesCount = pdfMeta ? pdfMeta.pageCount - uniqueAssignedPages : 0;
+  const deletedSetForCount = new Set(deletedPages);
+  const uniqueAssignedPages = new Set(
+    rules
+      .filter((r) => r.isValid)
+      .flatMap((r) => r.pages)
+      .filter((p) => !deletedSetForCount.has(p))
+  ).size;
+  const activeTotalPagesCount = pdfMeta ? Math.max(0, pdfMeta.pageCount - deletedSetForCount.size) : 0;
+  const unassignedPagesCount = Math.max(0, activeTotalPagesCount - uniqueAssignedPages);
   const hasErrors = rules.some((r) => !r.isValid);
 
   return (
     <>
-      <div className="app-container" style={{ paddingBottom: '36px' }}>
-        <Header
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          recentCount={recentFiles.length}
-          onOpenRecentModal={() => setIsRecentModalOpen(true)}
-        />
+      <div className={isEmbedded ? '' : 'app-container'} style={{ paddingBottom: isEmbedded ? '12px' : '36px' }}>
+        {!isEmbedded && (
+          <Header
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            recentCount={recentFiles.length}
+            onOpenRecentModal={() => setIsRecentModalOpen(true)}
+          />
+        )}
 
         {/* When in Home screen (no active file opened) */}
         {!pdfMeta && (
@@ -1166,6 +1296,7 @@ export const App: React.FC = () => {
                 totalPageCount={pdfMeta.pageCount}
                 rules={rules}
                 selectedPages={selectedPages}
+                deletedPages={deletedPages}
                 activeRuleId={activeRuleId}
                 hoveredRuleId={hoveredRuleId}
                 pageRotations={pageRotations}
@@ -1174,6 +1305,10 @@ export const App: React.FC = () => {
                 onDeselectAll={handleDeselectAll}
                 onCreateRuleFromSelected={handleCreateRuleFromSelected}
                 onSplitAtPage={handleSplitAtPage}
+                onDeletePage={handleDeletePage}
+                onDeleteSelectedPages={handleDeleteSelectedPages}
+                onRestorePage={handleRestorePage}
+                onRestoreAllPages={handleRestoreAllPages}
                 onRotatePage={handleRotatePage}
                 onRotateAllPages={handleRotateAllPages}
                 onResetRotations={handleResetRotations}

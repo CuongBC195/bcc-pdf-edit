@@ -1,0 +1,30 @@
+{
+  "name": "bccHub — Cổng tiện ích Văn phòng, PDF & Mã QR",
+  "short_name": "bccHub",
+  "description": "Cổng tiện ích Văn phòng, PDF & Mã QR chạy 100% trực tiếp trên trình duyệt.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080c14",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "/bcc-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mở bccHub Launcher",
+      "short_name": "Launcher",
+      "url": "/launcher?window=floating"
+    },
+    {
+      "name": "Mở Trang chủ bccHub",
+      "short_name": "Trang chủ",
+      "url": "/"
+    }
+  ]
+}

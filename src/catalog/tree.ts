@@ -286,18 +286,19 @@ export const CATEGORY_TREE: CategoryDef[] = [
   {
     slug: 'ma-qr-ma-vach',
     name: 'Mã QR & Mã vạch',
-    description: 'Dán link/văn bản/Wi-Fi tạo mã QR tức thì, tạo mã VietQR ngân hàng, mã vạch Code 128 và quét mã QR (Ctrl+V).',
+    description: 'Dán link/văn bản/Wi-Fi tạo mã QR tức thì, tạo QR/Mã vạch hàng loạt từ Excel, mã VietQR ngân hàng và quét mã QR (Ctrl+V).',
     icon: 'ph-qr-code',
     accent: '#10b981',
-    tools: ['qr-generator', 'qr-scanner', 'vietqr-generator', 'barcode-generator'],
+    tools: ['qr-generator', 'qr-scanner', 'batch-qr-generator', 'vietqr-generator', 'barcode-generator'],
   },
   {
     slug: 'van-ban-tieng-viet',
     name: 'Văn bản & Tiếng Việt',
-    description: 'Đọc số tiền ra chữ, chuyển mã TCVN3/VNI ↔ Unicode, chuẩn hóa Họ Tên, trích xuất SĐT/Email/CCCD, so sánh văn bản.',
+    description: 'Capture to Text (OCR ảnh sang chữ), đọc số tiền ra chữ, chuyển mã TCVN3/VNI ↔ Unicode, chuẩn hóa Họ Tên, trích xuất SĐT/Email/CCCD.',
     icon: 'ph-text-aa',
     accent: '#8b5cf6',
     tools: [
+      'capture-to-text',
       'number-to-words',
       'vn-font-converter',
       'text-case-accent',
@@ -310,10 +311,12 @@ export const CATEGORY_TREE: CategoryDef[] = [
   {
     slug: 'hinh-anh-van-phong',
     name: 'Ảnh & Hồ sơ văn phòng',
-    description: 'Đổi đuôi ảnh (PNG ↔ JPG ↔ WebP), đổi size chống vỡ nét, nén ảnh, cắt ảnh thẻ 3×4/4×6, ghép CCCD 2 mặt.',
+    description: 'Capture to Text (OCR), tách chữ ký/con dấu trong suốt, đổi đuôi ảnh (PNG ↔ JPG ↔ WebP), đổi size chống vỡ nét, cắt ảnh thẻ, ghép CCCD.',
     icon: 'ph-image-square',
     accent: '#f59e0b',
     tools: [
+      'capture-to-text',
+      'signature-extractor',
       'image-converter',
       'image-resizer',
       'image-compressor',
@@ -324,10 +327,10 @@ export const CATEGORY_TREE: CategoryDef[] = [
   {
     slug: 'du-lieu-bang-bieu',
     name: 'Dữ liệu & Danh sách Excel',
-    description: 'Tách Họ - Tên đệm - Tên & xếp A→Z chuẩn tiếng Việt, lọc trùng/đối chiếu 2 danh sách, tính thuế VAT xuôi-ngược.',
+    description: 'Giải mã CCCD 12 số hàng loạt, tách Họ - Tên đệm - Tên & xếp A→Z chuẩn tiếng Việt, lọc trùng/đối chiếu danh sách, tính thuế VAT.',
     icon: 'ph-table',
     accent: '#3b82f6',
-    tools: ['vn-name-splitter', 'list-deduplicator', 'vat-percent-calculator', 'table-converter'],
+    tools: ['cccd-inspector', 'vn-name-splitter', 'list-deduplicator', 'vat-percent-calculator', 'table-converter'],
   },
   {
     slug: 'thoi-gian-hanh-chinh',
@@ -342,8 +345,12 @@ export const CATEGORY_TREE: CategoryDef[] = [
 /** Công cụ hiển thị ở mục "Phổ biến" trên trang chủ. */
 export const POPULAR_TOOL_IDS = [
   'bcc-multi-split',
+  'capture-to-text',
   'qr-generator',
   'qr-scanner',
+  'batch-qr-generator',
+  'signature-extractor',
+  'cccd-inspector',
   'image-converter',
   'image-resizer',
   'number-to-words',

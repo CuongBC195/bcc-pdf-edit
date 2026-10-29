@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Moon, Search, Sun } from 'lucide-react';
 import { TOTAL_TOOL_COUNT } from '../catalog';
 import { BccLogo } from '../components/BccLogo';
 import { useHubPreferences } from '../utils/hubStorage';
 import { CategorySidebar } from './CategorySidebar';
+import { LauncherEmbedContext } from './LauncherEmbedContext';
 import { SearchModal } from './SearchModal';
 
 interface HubShellProps {
@@ -13,6 +14,7 @@ interface HubShellProps {
 }
 
 export const HubShell: React.FC<HubShellProps> = ({ children, hideSidebar = false }) => {
+  const isEmbedded = useContext(LauncherEmbedContext);
   const { theme, toggleTheme, recordVisit } = useHubPreferences();
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -27,6 +29,7 @@ export const HubShell: React.FC<HubShellProps> = ({ children, hideSidebar = fals
     if (iconLink && !iconLink.href.includes('bcc-logo.svg')) {
       iconLink.href = '/bcc-logo.svg?v=3';
     }
+    if (isEmbedded) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -35,7 +38,11 @@ export const HubShell: React.FC<HubShellProps> = ({ children, hideSidebar = fals
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [isEmbedded]);
+
+  if (isEmbedded) {
+    return <div className="raycast-embedded-content">{children}</div>;
+  }
 
   return (
     <div className="app-container">

@@ -48,8 +48,10 @@
   }
 
   // ?theme=light|dark (tiện cho kiểm thử / chia sẻ link)
-  var themeParam = new URLSearchParams(location.search).get('theme');
+  var params = new URLSearchParams(location.search);
+  var themeParam = params.get('theme');
   if (themeParam === 'light' || themeParam === 'dark') safeSet(THEME_KEY, themeParam);
+  if (params.get('embed') === '1') root.setAttribute('data-bcc-embed', '1');
   applyTheme(safeGet(THEME_KEY));
 
   window.addEventListener('storage', function (e) {
@@ -102,13 +104,50 @@
     window.addEventListener('keydown', function (e) {
       if ((e.metaKey || e.ctrlKey) && String(e.key).toLowerCase() === 'k') {
         e.preventDefault();
-        location.href = '/?search=1';
+        if (root.getAttribute('data-bcc-embed') === '1' && window.parent !== window) {
+          window.parent.postMessage({ type: 'bcc:embed-back' }, '*');
+        } else {
+          location.href = '/?search=1';
+        }
+        return;
+      }
+      if (
+        e.key === 'Escape' &&
+        root.getAttribute('data-bcc-embed') === '1' &&
+        window.parent !== window
+      ) {
+        var tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : '';
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+          e.preventDefault();
+          window.parent.postMessage({ type: 'bcc:embed-back' }, '*');
+        }
       }
     });
 
     var head = document.querySelector('[data-bcc-tool-id]');
     if (head) recordRecent(head.getAttribute('data-bcc-tool-id'));
     syncFavButtons();
+
+    // Nhận tệp PDF/Ảnh truyền trực tiếp từ Raycast Launcher (khi người dùng trỏ vào file rồi nhấn Alt+Space -> Enter)
+    if (root.getAttribute('data-bcc-embed') === '1' && window.parent !== window) {
+      window.addEventListener('message', function (ev) {
+        if (!ev.data || ev.data.type !== 'bcc:load-context-file' || !ev.data.file) return;
+        try {
+          var fileInput =
+            document.getElementById('file-input') ||
+            document.querySelector('input[type="file"]');
+          if (fileInput && typeof DataTransfer !== 'undefined') {
+            var dt = new DataTransfer();
+            dt.items.add(ev.data.file);
+            fileInput.files = dt.files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        } catch (err) {
+          console.warn('Không thể tự nạp tệp vào công cụ PDF:', err);
+        }
+      });
+      window.parent.postMessage({ type: 'bcc:embed-ready' }, '*');
+    }
   }
 
   if (document.readyState === 'loading') {

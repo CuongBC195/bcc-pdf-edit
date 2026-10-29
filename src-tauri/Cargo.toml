@@ -1,0 +1,16 @@
+[package]
+name = "bcchub-launcher"
+version = "1.0.0"
+description = "bccHub Raycast Floating Launcher cho Windows (Alt + Space)"
+authors = ["bccHub"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-global-shortcut = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"

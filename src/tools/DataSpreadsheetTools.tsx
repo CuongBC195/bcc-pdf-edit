@@ -2,8 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { ArrowDownAZ, Check, Copy } from 'lucide-react';
 import { HubShell } from '../hub/HubShell';
 import { ToolPageHeader } from './ToolPageHeader';
+import { decodeVnCccd, VN_PROVINCE_CODES, type DecodedCccd } from '../utils/vnCccd';
 
 export type DataSpreadsheetToolId =
+  | 'cccd-inspector'
   | 'vn-name-splitter'
   | 'list-deduplicator'
   | 'table-converter'
@@ -497,9 +499,355 @@ export const DataSpreadsheetTools: React.FC<{ toolId: DataSpreadsheetToolId }> =
       <ToolPageHeader toolId={toolId} />
       {toolId === 'vn-name-splitter' && <VnNameSplitterView />}
       {toolId === 'list-deduplicator' && <ListDeduplicatorView />}
+      {toolId === 'cccd-inspector' && <CccdInspectorView />}
+      {toolId === 'vn-name-splitter' && <VnNameSplitterView />}
+      {toolId === 'list-deduplicator' && <ListDeduplicatorView />}
       {toolId === 'table-converter' && <TableConverterView />}
       {toolId === 'vat-percent-calculator' && <VatPercentCalculatorView />}
     </HubShell>
+  );
+};
+
+// ============================================================================
+// 0. GIẢI MÃ & KIỂM TRA SỐ CCCD 12 SỐ HÀNG LOẠT (CHUẨN EXCEL)
+// ============================================================================
+const CccdInspectorView: React.FC = () => {
+  const [input, setInput] = useState(
+    [
+      '001095012345',
+      '79201004567',
+      '048198008899',
+      '092089001122',
+      '031304005566',
+    ].join('\n')
+  );
+  const [autoPadZero, setAutoPadZero] = useState(true);
+  const [excelQuotePrefix, setExcelQuotePrefix] = useState(false);
+  const [provinceSearch, setProvinceSearch] = useState('');
+
+  const rows = useMemo<DecodedCccd[]>(() => {
+    return input
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        // Nếu người dùng dán nhiều cột từ Excel, tự động tìm cột chứa chuỗi 11-12 chữ số
+        const parts = line.split(/\t|,|;/).map((p) => p.trim());
+        const candidate = parts.find((p) => /^'?\d{9,15}$/.test(p.replace(/\s+/g, ''))) ?? parts[0];
+        return decodeVnCccd(candidate, { autoPadLeadingZero: autoPadZero });
+      });
+  }, [input, autoPadZero]);
+
+  const stats = useMemo(() => {
+    const valid = rows.filter((r) => r.isValid).length;
+    const padded = rows.filter((r) => r.wasZeroPadded).length;
+    const invalid = rows.length - valid;
+    const male = rows.filter((r) => r.isValid && r.gender === 'Nam').length;
+    const female = rows.filter((r) => r.isValid && r.gender === 'Nữ').length;
+    return { total: rows.length, valid, padded, invalid, male, female };
+  }, [rows]);
+
+  const tsvAll = useMemo(() => {
+    const header = [
+      'Số CCCD chuẩn (12 số)',
+      'Giới tính',
+      'Năm sinh',
+      'Tuổi',
+      'Mã tỉnh',
+      'Tỉnh/Thành ĐK khai sinh',
+      'Số định danh cuối',
+      'Trạng thái',
+    ].join('\t');
+    const lines = rows.map((r) => {
+      const codeOut = excelQuotePrefix ? `'${r.normalizedCode}` : r.normalizedCode;
+      if (!r.isValid) {
+        return [
+          codeOut,
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          `Lỗi: ${r.errorReason ?? 'Không hợp lệ'}`,
+        ].join('\t');
+      }
+      return [
+        codeOut,
+        r.gender,
+        String(r.birthYear),
+        String(r.age),
+        r.provinceCode,
+        r.provinceName,
+        r.randomSerial,
+        r.wasZeroPadded ? 'Hợp lệ (Đã bù số 0 đầu)' : 'Hợp lệ',
+      ].join('\t');
+    });
+    return [header, ...lines].join('\n');
+  }, [rows, excelQuotePrefix]);
+
+  const tsvOnlyNormalizedCode = useMemo(() => {
+    return rows
+      .map((r) => (excelQuotePrefix ? `'${r.normalizedCode}` : r.normalizedCode))
+      .join('\n');
+  }, [rows, excelQuotePrefix]);
+
+  const provinceEntries = useMemo(() => {
+    const q = provinceSearch.trim().toLowerCase();
+    return Object.entries(VN_PROVINCE_CODES).filter(
+      ([code, name]) => !q || code.includes(q) || name.toLowerCase().includes(q)
+    );
+  }, [provinceSearch]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
+          gap: '18px',
+          alignItems: 'start',
+        }}
+      >
+        <div
+          className="bento-card"
+          style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '12px' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+              Dán cột Số CCCD từ Excel (mỗi dòng 1 số):
+            </label>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              {stats.total} dòng
+            </span>
+          </div>
+
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows={9}
+            placeholder="Dán danh sách số CCCD 12 số (hoặc 11 số bị mất số 0 đầu từ Excel)..."
+            className="input-field"
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', resize: 'vertical' }}
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.83rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={autoPadZero}
+                onChange={(e) => setAutoPadZero(e.target.checked)}
+              />
+              <span>
+                Tự động bù số <code>0</code> ở đầu nếu Excel làm mất (11 số → 12 số chuẩn)
+              </span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={excelQuotePrefix}
+                onChange={(e) => setExcelQuotePrefix(e.target.checked)}
+              />
+              <span>
+                Thêm dấu nháy đơn <code>&apos;0...</code> khi Copy để dán vào Excel không bị mất số 0
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div
+          className="bento-card"
+          style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}
+        >
+          <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Thống kê & Sao chép sang Excel</div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: '10px',
+            }}
+          >
+            {[
+              { label: 'Hợp lệ', value: stats.valid, color: '#10b981' },
+              { label: 'Đã tự bù số 0', value: stats.padded, color: '#0284c7' },
+              { label: 'Nam / Nữ', value: `${stats.male} / ${stats.female}`, color: '#8b5cf6' },
+              { label: 'Lỗi cấu trúc', value: stats.invalid, color: '#f43f5e' },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-subtle)',
+                }}
+              >
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>{item.label}</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: item.color }}>
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <CopyTextBtn text={tsvAll} label="Copy toàn bộ bảng (Dán vào Excel)" primary />
+            <CopyTextBtn text={tsvOnlyNormalizedCode} label="Chỉ Copy cột CCCD 12 số chuẩn" />
+          </div>
+
+          <div
+            style={{
+              borderTop: '1px solid var(--border-subtle)',
+              paddingTop: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                Tra cứu nhanh 63 Mã tỉnh/thành CCCD:
+              </span>
+              <input
+                type="text"
+                value={provinceSearch}
+                onChange={(e) => setProvinceSearch(e.target.value)}
+                placeholder="Gõ tên tỉnh hoặc mã (VD: 079, Hà Nội)..."
+                className="input-field"
+                style={{ width: '220px', padding: '5px 10px', fontSize: '0.78rem' }}
+              />
+            </div>
+
+            <div
+              style={{
+                maxHeight: '115px',
+                overflowY: 'auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
+                gap: '6px',
+                fontSize: '0.76rem',
+              }}
+            >
+              {provinceEntries.map(([code, name]) => (
+                <div
+                  key={code}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <strong style={{ color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
+                    {code}
+                  </strong>
+                  <span
+                    style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      color: 'var(--text-main)',
+                    }}
+                  >
+                    {name.replace(/^(Thành phố |Tỉnh )/, '')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bento-card" style={{ padding: '18px 22px', overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+          <thead>
+            <tr
+              style={{
+                borderBottom: '1px solid var(--border-subtle)',
+                textAlign: 'left',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <th style={{ padding: '8px' }}>#</th>
+              <th style={{ padding: '8px' }}>Số CCCD chuẩn (12 số)</th>
+              <th style={{ padding: '8px' }}>Giới tính</th>
+              <th style={{ padding: '8px' }}>Năm sinh</th>
+              <th style={{ padding: '8px' }}>Tuổi</th>
+              <th style={{ padding: '8px' }}>Tỉnh/Thành ĐK khai sinh</th>
+              <th style={{ padding: '8px' }}>6 số cuối</th>
+              <th style={{ padding: '8px' }}>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, idx) => (
+              <tr
+                key={`${r.rawInput}-${idx}`}
+                style={{ borderBottom: '1px solid var(--border-subtle)' }}
+              >
+                <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{idx + 1}</td>
+                <td
+                  style={{
+                    padding: '8px',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 700,
+                    color: r.isValid ? 'var(--text-main)' : '#f43f5e',
+                  }}
+                >
+                  {r.normalizedCode}
+                </td>
+                <td style={{ padding: '8px', fontWeight: 600 }}>
+                  {r.isValid ? r.gender : '-'}
+                </td>
+                <td style={{ padding: '8px', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                  {r.isValid ? r.birthYear : '-'}
+                </td>
+                <td style={{ padding: '8px' }}>{r.isValid ? `${r.age} tuổi` : '-'}</td>
+                <td style={{ padding: '8px', fontWeight: 600 }}>
+                  {r.isValid ? `${r.provinceName} (${r.provinceCode})` : '-'}
+                </td>
+                <td style={{ padding: '8px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                  {r.isValid ? r.randomSerial : '-'}
+                </td>
+                <td style={{ padding: '8px' }}>
+                  {r.isValid ? (
+                    <span
+                      className="badge"
+                      style={{
+                        fontSize: '0.68rem',
+                        padding: '2px 8px',
+                        color: r.wasZeroPadded ? '#0284c7' : '#10b981',
+                        background: r.wasZeroPadded
+                          ? 'rgba(2,132,199,0.12)'
+                          : 'rgba(16,185,129,0.12)',
+                      }}
+                    >
+                      {r.wasZeroPadded ? 'Đã tự bù số 0 đầu' : 'Hợp lệ'}
+                    </span>
+                  ) : (
+                    <span
+                      className="badge"
+                      style={{
+                        fontSize: '0.68rem',
+                        padding: '2px 8px',
+                        color: '#f43f5e',
+                        background: 'rgba(244,63,94,0.12)',
+                      }}
+                    >
+                      {r.errorReason}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 

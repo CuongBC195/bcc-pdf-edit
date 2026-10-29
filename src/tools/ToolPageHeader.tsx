@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router';
 import { ArrowLeft, Star } from 'lucide-react';
 import {
@@ -6,6 +6,7 @@ import {
   getCategoryHref,
   getToolHref,
 } from '../catalog';
+import { LauncherEmbedContext } from '../hub/LauncherEmbedContext';
 import { useHubPreferences } from '../utils/hubStorage';
 
 interface ToolPageHeaderProps {
@@ -14,8 +15,17 @@ interface ToolPageHeaderProps {
 }
 
 export const ToolPageHeader: React.FC<ToolPageHeaderProps> = ({ toolId, rightSlot }) => {
+  const isEmbedded = useContext(LauncherEmbedContext);
   const { favorites, toggleFavorite, recordVisit } = useHubPreferences();
   const loc = findToolLocation(toolId);
+
+  if (isEmbedded) {
+    return rightSlot ? (
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+        {rightSlot}
+      </div>
+    ) : null;
+  }
 
   if (!loc) return null;
 

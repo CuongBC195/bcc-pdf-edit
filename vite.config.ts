@@ -85,13 +85,41 @@ function bccPdfEnginePlugin(): Plugin {
   const rootDir = import.meta.dirname;
   const bentoDistDir = path.resolve(rootDir, 'vendor/bentopdf/dist');
   const outPdfDir = path.resolve(rootDir, 'dist/pdf');
+  const pdfWorkerFile = path.resolve(rootDir, 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs');
+
+  const serveRawPdfWorkerMiddleware = (
+    req: IncomingMessage,
+    res: ServerResponse,
+    next: () => void
+  ) => {
+    if (!req.url) return next();
+    const [rawPath, query = ''] = req.url.split('?');
+    // Let Vite handle `?url` import module wrapper, but serve the actual worker script raw
+    // so Vite 8 does not inject `/@vite/client` (which uses `window` and crashes Web Workers).
+    if (
+      (rawPath === '/node_modules/pdfjs-dist/build/pdf.worker.min.mjs' ||
+        rawPath === '/pdfjs/pdf.worker.min.mjs') &&
+      !query.includes('url')
+    ) {
+      if (fs.existsSync(pdfWorkerFile)) {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        fs.createReadStream(pdfWorkerFile).pipe(res);
+        return;
+      }
+    }
+    next();
+  };
 
   return {
     name: 'bcchub-pdf-engine',
     configureServer(server) {
+      server.middlewares.use(serveRawPdfWorkerMiddleware);
       server.middlewares.use(createPdfEngineMiddleware(bentoDistDir));
     },
     configurePreviewServer(server) {
+      server.middlewares.use(serveRawPdfWorkerMiddleware);
       const dir = fs.existsSync(outPdfDir) ? outPdfDir : bentoDistDir;
       server.middlewares.use(createPdfEngineMiddleware(dir));
     },
@@ -106,4 +134,7 @@ function bccPdfEnginePlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), bccPdfEnginePlugin()],
+  optimizeDeps: {
+    entries: ['index.html'],
+  },
 });

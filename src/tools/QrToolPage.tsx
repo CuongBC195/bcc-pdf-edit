@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import JSZip from 'jszip';
+import { PDFDocument, rgb } from 'pdf-lib';
 import {
   Barcode,
   Camera,
@@ -27,11 +29,12 @@ import {
 } from '../utils/qrCode';
 import { VIETQR_BANKS } from '../data/vietqrBanks';
 import { buildVietQrPayload, sanitizeTransferNote } from '../utils/vietqr';
-import { renderCode128Svg } from '../utils/barcode128';
+import { encodeCode128, isCode128Encodable, renderCode128Svg } from '../utils/barcode128';
 
 export type QrBarcodeToolId =
   | 'qr-generator'
   | 'qr-scanner'
+  | 'batch-qr-generator'
   | 'vietqr-generator'
   | 'barcode-generator';
 
@@ -1664,7 +1667,492 @@ export const QrToolPage: React.FC<QrToolPageProps> = ({ toolId = 'qr-generator' 
           </div>
         </div>
       )}
+
+      {/* ==================== 5. TẠO MÃ QR & MÃ VẠCH HÀNG LOẠT (EXCEL -> ZIP / A4 PDF) ==================== */}
+      {toolId === 'batch-qr-generator' && <BatchQrGeneratorView />}
     </HubShell>
+  );
+};
+
+interface BatchStickerItem {
+  index: number;
+  payload: string;
+  label: string;
+  valid: boolean;
+  error?: string;
+}
+
+function renderStickerCanvas(
+  item: BatchStickerItem,
+  kind: 'qr' | 'code128',
+  showLabel: boolean
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  const w = 480;
+  const h = showLabel ? 540 : 480;
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+
+  if (kind === 'qr') {
+    const qrCanvas = document.createElement('canvas');
+    renderQrToCanvas(qrCanvas, item.payload, {
+      sizePx: 400,
+      marginModules: 2,
+      ecl: 'M',
+      darkColor: '#0f172a',
+      lightColor: '#ffffff',
+    });
+    ctx.drawImage(qrCanvas, 40, 24, 400, 400);
+  } else {
+    const widths = encodeCode128(item.payload);
+    const quietZone = 10;
+    const totalModules = widths.reduce((a, b) => a + b, 0) + quietZone * 2;
+    const moduleW = Math.max(1.5, Math.floor((w - 64) / totalModules));
+    const totalBarW = totalModules * moduleW;
+    const startX = Math.round((w - totalBarW) / 2) + quietZone * moduleW;
+    const barTop = showLabel ? 90 : 120;
+    const barHeight = 240;
+
+    ctx.fillStyle = '#0f172a';
+    let curX = startX;
+    widths.forEach((wd, idx) => {
+      if (idx % 2 === 0) {
+        ctx.fillRect(curX, barTop, wd * moduleW, barHeight);
+      }
+      curX += wd * moduleW;
+    });
+
+    ctx.font = 'bold 20px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(item.payload, w / 2, barTop + barHeight + 30);
+  }
+
+  if (showLabel) {
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 24px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const maxTextWidth = w - 48;
+    let displayLabel = item.label;
+    while (displayLabel.length > 4 && ctx.measureText(displayLabel).width > maxTextWidth) {
+      displayLabel = `${displayLabel.slice(0, -2)}…`;
+    }
+    ctx.fillText(displayLabel, w / 2, h - 42);
+  }
+
+  return canvas;
+}
+
+const BatchQrGeneratorView: React.FC = () => {
+  const [rawInput, setRawInput] = useState(
+    [
+      'TS-2026-001\tMáy tính xách tay Phòng Kế toán',
+      'TS-2026-002\tMáy in Laser Văn phòng ĐU',
+      'TS-2026-003\tMáy quét tài liệu tốc độ cao',
+      'https://bcchub.vn/ho-so-01\tHồ sơ lưu trữ số 01/2026',
+      'https://bcchub.vn/ho-so-02\tHồ sơ lưu trữ số 02/2026',
+      'HS-HANCHINH-006\tCặp hồ sơ Hội nghị lần thứ 4',
+    ].join('\n')
+  );
+  const [codeKind, setCodeKind] = useState<'qr' | 'code128'>('qr');
+  const [gridPreset, setGridPreset] = useState<'3x4' | '3x5' | '4x6'>('3x5');
+  const [showLabel, setShowLabel] = useState<boolean>(true);
+  const [showCutLines, setShowCutLines] = useState<boolean>(true);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  const items = useMemo<BatchStickerItem[]>(() => {
+    return rawInput
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .slice(0, 500)
+      .map((line, idx) => {
+        const parts = line.split(/\t|\|/);
+        const payload = parts[0].trim();
+        const label = (parts[1] ?? parts[0]).trim();
+
+        if (codeKind === 'code128' && !isCode128Encodable(payload)) {
+          return {
+            index: idx + 1,
+            payload,
+            label,
+            valid: false,
+            error: 'Code 128 chỉ nhận chữ không dấu & số ASCII (Hãy chọn Mã QR cho Tiếng Việt)',
+          };
+        }
+
+        return {
+          index: idx + 1,
+          payload,
+          label,
+          valid: true,
+        };
+      });
+  }, [rawInput, codeKind]);
+
+  const validItems = useMemo(() => items.filter((i) => i.valid), [items]);
+
+  const handleDownloadSinglePng = (item: BatchStickerItem) => {
+    if (!item.valid) return;
+    const canvas = renderStickerCanvas(item, codeKind, showLabel);
+    const safeName = item.label
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 36);
+    const link = document.createElement('a');
+    link.download = `${String(item.index).padStart(3, '0')}-${safeName || 'ma-qr'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const handleExportZip = async () => {
+    if (validItems.length === 0 || isExporting) return;
+    setIsExporting(true);
+    try {
+      const zip = new JSZip();
+      for (const item of validItems) {
+        const canvas = renderStickerCanvas(item, codeKind, showLabel);
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/png')
+        );
+        if (blob) {
+          const safeName = item.label
+            .toLowerCase()
+            .replace(/[^a-z0-9-_]+/gi, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 40);
+          const fileName = `${String(item.index).padStart(3, '0')}-${safeName || 'tem'}.png`;
+          zip.file(fileName, blob);
+        }
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bccHub-${codeKind}-${validItems.length}-tem.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPdfA4 = async () => {
+    if (validItems.length === 0 || isExporting) return;
+    setIsExporting(true);
+    try {
+      const [cols, rows] = gridPreset.split('x').map(Number);
+      const perPage = cols * rows;
+      const pdfDoc = await PDFDocument.create();
+
+      const pageW = 595.28; // A4 width pt
+      const pageH = 841.89; // A4 height pt
+      const margin = 24;
+      const cellW = (pageW - margin * 2) / cols;
+      const cellH = (pageH - margin * 2) / rows;
+
+      for (let i = 0; i < validItems.length; i += perPage) {
+        const page = pdfDoc.addPage([pageW, pageH]);
+        const chunk = validItems.slice(i, i + perPage);
+
+        for (let j = 0; j < chunk.length; j++) {
+          const item = chunk[j];
+          const col = j % cols;
+          const row = Math.floor(j / cols);
+
+          const cellX = margin + col * cellW;
+          const cellY = pageH - margin - (row + 1) * cellH;
+
+          if (showCutLines) {
+            page.drawRectangle({
+              x: cellX + 2,
+              y: cellY + 2,
+              width: cellW - 4,
+              height: cellH - 4,
+              borderColor: rgb(0.82, 0.85, 0.89),
+              borderWidth: 0.6,
+            });
+          }
+
+          const canvas = renderStickerCanvas(item, codeKind, showLabel);
+          const dataUrl = canvas.toDataURL('image/png');
+          const pngImage = await pdfDoc.embedPng(dataUrl);
+
+          const pad = 8;
+          const availW = cellW - pad * 2;
+          const availH = cellH - pad * 2;
+          const scale = Math.min(availW / canvas.width, availH / canvas.height);
+          const drawW = canvas.width * scale;
+          const drawH = canvas.height * scale;
+
+          page.drawImage(pngImage, {
+            x: cellX + (cellW - drawW) / 2,
+            y: cellY + (cellH - drawH) / 2,
+            width: drawW,
+            height: drawH,
+          });
+        }
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bccHub-vi-in-tem-${gridPreset}-${validItems.length}-ma.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '18px',
+          alignItems: 'start',
+        }}
+      >
+        <div
+          className="bento-card"
+          style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '12px' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+              Dán danh sách từ Excel (Cột 1: Mã/Link • Cột 2 tùy chọn: Nhãn tên):
+            </label>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              {validItems.length} tem hợp lệ
+            </span>
+          </div>
+
+          <textarea
+            value={rawInput}
+            onChange={(e) => setRawInput(e.target.value)}
+            rows={8}
+            placeholder="Mỗi dòng 1 mã. Có thể copy 2 cột từ Excel (Mã [Tab] Tên nhãn hiển thị)..."
+            className="input-field"
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.86rem', resize: 'vertical' }}
+          />
+
+          <div style={{ fontSize: '0.76rem', color: 'var(--text-dim)' }}>
+            Mẹo: Khi bôi đen 2 cột trong Excel (Cột A = Mã/Link, Cột B = Tên tài sản/Hồ sơ) rồi dán vào đây, công cụ sẽ tự lấy Cột A làm mã QR và Cột B làm dòng chữ in dưới tem.
+          </div>
+        </div>
+
+        <div
+          className="bento-card"
+          style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}
+        >
+          <div>
+            <label style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px' }}>
+              Loại mã cần sinh hàng loạt:
+            </label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setCodeKind('qr')}
+                className={`btn btn-sm ${codeKind === 'qr' ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                <QrCode size={15} />
+                <span>Mã QR (Hỗ trợ Link & Tiếng Việt)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCodeKind('code128')}
+                className={`btn btn-sm ${codeKind === 'code128' ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                <Barcode size={15} />
+                <span>Mã vạch Code 128 (Mã hồ sơ/Tài sản)</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px' }}>
+              Bố cục dàn trang PDF khổ A4 (In tem dán):
+            </label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {(
+                [
+                  { id: '3x4', label: '3 × 4 (12 tem/trang A4)' },
+                  { id: '3x5', label: '3 × 5 (15 tem/trang A4)' },
+                  { id: '4x6', label: '4 × 6 (24 tem/trang A4)' },
+                ] as const
+              ).map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setGridPreset(g.id)}
+                  className={`btn btn-sm ${gridPreset === g.id ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  <span>{g.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', fontSize: '0.84rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showLabel}
+                onChange={(e) => setShowLabel(e.target.checked)}
+              />
+              <span>In kèm dòng nhãn chữ tiếng Việt bên dưới mỗi mã</span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showCutLines}
+                onChange={(e) => setShowCutLines(e.target.checked)}
+              />
+              <span>Kẻ khung viền mảnh dẫn hướng cắt tem trên trang PDF A4</span>
+            </label>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
+            <button
+              type="button"
+              disabled={validItems.length === 0 || isExporting}
+              onClick={() => void handleExportPdfA4()}
+              className="btn btn-primary"
+            >
+              <Download size={16} />
+              <span>
+                {isExporting
+                  ? 'Đang tạo file...'
+                  : `Xuất PDF Vỉ In A4 (${Math.ceil(validItems.length / (Number(gridPreset[0]) * Number(gridPreset[2])))} trang)`}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              disabled={validItems.length === 0 || isExporting}
+              onClick={() => void handleExportZip()}
+              className="btn btn-secondary"
+            >
+              <Download size={16} />
+              <span>Tải trọn bộ ảnh PNG (.ZIP)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bento-card" style={{ padding: '20px 22px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '14px',
+          }}
+        >
+          <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>
+            Xem trước danh sách tem ({items.length} mục — bấm vào từng tem để tải lẻ PNG)
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
+            gap: '12px',
+          }}
+        >
+          {items.slice(0, 60).map((item) => (
+            <div
+              key={`${item.index}-${item.payload}`}
+              onClick={() => handleDownloadSinglePng(item)}
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: 'var(--bg-surface)',
+                border: `1px solid ${item.valid ? 'var(--border-subtle)' : '#f43f5e'}`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: item.valid ? 'pointer' : 'default',
+                textAlign: 'center',
+              }}
+              title={item.valid ? 'Bấm để tải ảnh PNG của tem này' : item.error}
+            >
+              {item.valid ? (
+                <div
+                  style={{
+                    background: '#ffffff',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      codeKind === 'qr'
+                        ? renderQrToSvgString(item.payload, {
+                            sizePx: 118,
+                            marginModules: 1,
+                            ecl: 'M',
+                            darkColor: '#0f172a',
+                            lightColor: '#ffffff',
+                          })
+                        : renderCode128Svg(item.payload, {
+                            moduleWidth: 1.5,
+                            height: 60,
+                            showText: true,
+                          }),
+                  }}
+                />
+              ) : (
+                <div style={{ fontSize: '0.75rem', color: '#f43f5e', padding: '16px 6px' }}>
+                  {item.error}
+                </div>
+              )}
+
+              {showLabel && (
+                <div
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    color: 'var(--text-main)',
+                    width: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {item.label}
+                </div>
+              )}
+              <div
+                style={{
+                  fontSize: '0.68rem',
+                  color: 'var(--text-dim)',
+                  fontFamily: 'var(--font-mono)',
+                  width: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                #{item.index} • {item.payload}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 

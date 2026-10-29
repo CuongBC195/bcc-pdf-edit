@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowRight, Folder, Search, X } from 'lucide-react';
+import { ArrowRight, Check, Folder, Search, Sparkles, X } from 'lucide-react';
 import {
   getCategoryHref,
   getToolHref,
@@ -9,6 +9,9 @@ import {
   type CategoryNode,
   type ToolLocation,
 } from '../catalog';
+import { useHubPreferences } from '../utils/hubStorage';
+import { renderQrToCanvas } from '../utils/qrCode';
+import { resolveRaycastActions, type RaycastQuickAction } from '../utils/raycastActions';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -18,6 +21,7 @@ interface SearchModalProps {
 }
 
 type SearchResultItem =
+  | { kind: 'quick'; action: RaycastQuickAction }
   | { kind: 'category'; node: CategoryNode }
   | { kind: 'tool'; location: ToolLocation };
 
@@ -27,8 +31,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   onClose,
   onOpenTool,
 }) => {
+  const { toggleTheme } = useHubPreferences();
   const [query, setQuery] = useState(initialQuery);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
 
@@ -38,6 +44,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       return () => clearTimeout(id);
     }
   }, [isOpen]);
+
+  const quickActions = useMemo(() => resolveRaycastActions(query), [query]);
 
   const { categories, tools } = useMemo(() => {
     if (!query.trim()) {
@@ -52,10 +60,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   const flatItems = useMemo<SearchResultItem[]>(() => {
     return [
+      ...quickActions.map((action): SearchResultItem => ({ kind: 'quick', action })),
       ...categories.map((node): SearchResultItem => ({ kind: 'category', node })),
       ...tools.map((location): SearchResultItem => ({ kind: 'tool', location })),
     ];
-  }, [categories, tools]);
+  }, [quickActions, categories, tools]);
 
   const handleClose = () => {
     setQuery('');
@@ -63,7 +72,51 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     onClose();
   };
 
+  const executeQuickAction = async (action: RaycastQuickAction) => {
+    if (action.specialEffect === 'toggle-theme') {
+      toggleTheme();
+      setCopiedId(action.id);
+      setTimeout(() => setCopiedId(null), 1500);
+      return;
+    }
+
+    if (action.qrPayload) {
+      try {
+        const canvas = document.createElement('canvas');
+        renderQrToCanvas(canvas, action.qrPayload, {
+          sizePx: 600,
+          marginModules: 3,
+          darkColor: '#0f172a',
+          lightColor: '#ffffff',
+        });
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (blob && navigator.clipboard && 'ClipboardItem' in window) {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          setCopiedId(action.id);
+          setTimeout(() => setCopiedId(null), 1500);
+          return;
+        }
+      } catch {
+        // Fallback sang copy text
+      }
+    }
+
+    if (action.copyText) {
+      try {
+        await navigator.clipboard.writeText(action.copyText);
+        setCopiedId(action.id);
+        setTimeout(() => setCopiedId(null), 1500);
+      } catch {
+        // Bỏ qua nếu bị chặn
+      }
+    }
+  };
+
   const activateItem = (item: SearchResultItem) => {
+    if (item.kind === 'quick') {
+      void executeQuickAction(item.action);
+      return;
+    }
     handleClose();
     if (item.kind === 'category') {
       navigate(getCategoryHref(item.node));
@@ -111,7 +164,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Tìm kiếm công cụ PDF"
+      aria-label="Tìm kiếm & Lệnh nhanh bccHub"
     >
       <div
         className="hub-search-dialog animate-popup-scale"
@@ -136,7 +189,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            placeholder="Nhập tên công cụ (có dấu hoặc không dấu: gop pdf, tach trang, ocr, word...)"
+            placeholder="Gõ số tiền (15tr), phép tính (1250*48), link QR, ngày (+15 ngay) hoặc tên công cụ..."
             style={{
               flex: 1,
               background: 'transparent',
@@ -187,10 +240,102 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 fontSize: '0.9rem',
               }}
             >
-              Không tìm thấy công cụ hoặc danh mục phù hợp với “{query}”.
+              Không tìm thấy công cụ hoặc lệnh phù hợp với “{query}”.
             </div>
           ) : (
             <>
+              {quickActions.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.73rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      color: 'var(--accent-cyan)',
+                      padding: '4px 10px 6px',
+                    }}
+                  >
+                    <Sparkles size={13} />
+                    <span>Kết quả tức thì ({quickActions.length}) — Nhấn Enter để Copy</span>
+                  </div>
+                  {quickActions.map((action, idx) => {
+                    const isSelected = selectedIndex === idx;
+                    const isCopied = copiedId === action.id;
+                    return (
+                      <div
+                        key={action.id}
+                        onClick={() => activateItem({ kind: 'quick', action })}
+                        onMouseEnter={() => setSelectedIndex(idx)}
+                        className={`hub-search-item ${isSelected ? 'is-selected' : ''}`}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                          <div
+                            className="hub-icon-box"
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              fontSize: '1.15rem',
+                              color: action.accent,
+                              background: `${action.accent}1a`,
+                              borderColor: `${action.accent}40`,
+                            }}
+                          >
+                            <i className={`ph ${action.icon}`} />
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                fontSize: '0.9rem',
+                                color: 'var(--text-main)',
+                              }}
+                            >
+                              {action.title}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '0.77rem',
+                                color: 'var(--text-muted)',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {action.subtitle}
+                            </div>
+                          </div>
+                        </div>
+                        <span
+                          className="badge"
+                          style={{
+                            fontSize: '0.65rem',
+                            padding: '2px 8px',
+                            color: isCopied ? '#10b981' : action.accent,
+                            background: isCopied ? 'rgba(16,185,129,0.16)' : `${action.accent}1a`,
+                            border: `1px solid ${isCopied ? '#10b981' : action.accent}40`,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {isCopied ? (
+                            <>
+                              <Check size={11} />
+                              <span>ĐÃ COPY</span>
+                            </>
+                          ) : (
+                            action.badge
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {categories.length > 0 && (
                 <div style={{ marginBottom: '12px' }}>
                   <div
@@ -206,7 +351,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     Danh mục ({categories.length})
                   </div>
                   {categories.map((cat, idx) => {
-                    const isSelected = selectedIndex === idx;
+                    const globalIdx = quickActions.length + idx;
+                    const isSelected = selectedIndex === globalIdx;
                     return (
                       <a
                         key={cat.path.join('/')}
@@ -215,7 +361,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                           e.preventDefault();
                           activateItem({ kind: 'category', node: cat });
                         }}
-                        onMouseEnter={() => setSelectedIndex(idx)}
+                        onMouseEnter={() => setSelectedIndex(globalIdx)}
                         className={`hub-search-item ${isSelected ? 'is-selected' : ''}`}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -280,7 +426,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                   {query.trim() ? `Công cụ (${tools.length})` : 'Công cụ phổ biến'}
                 </div>
                 {tools.map((loc, idx) => {
-                  const globalIdx = categories.length + idx;
+                  const globalIdx = quickActions.length + categories.length + idx;
                   const isSelected = selectedIndex === globalIdx;
                   const accent = loc.trail[0]?.accent ?? '#06b6d4';
                   return (
@@ -374,8 +520,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             background: 'var(--bg-surface-elevated)',
           }}
         >
-          <span>Dùng phím ↑↓ để chọn, Enter để mở, ESC để đóng</span>
-          <span>Hỗ trợ tìm tiếng Việt không dấu & tiếng Anh</span>
+          <span>↑↓ chọn • Enter mở hoặc Copy kết quả • ESC đóng</span>
+          <span>100% xử lý trên trình duyệt</span>
         </div>
       </div>
     </div>

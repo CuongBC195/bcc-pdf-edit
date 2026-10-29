@@ -20,6 +20,7 @@ const TimeAdminTools = React.lazy(() => import('../tools/TimeAdminTools'));
 const QR_BARCODE_IDS = new Set<QrBarcodeToolId>([
   'qr-generator',
   'qr-scanner',
+  'batch-qr-generator',
   'vietqr-generator',
   'barcode-generator',
 ]);
@@ -35,6 +36,8 @@ const VN_TEXT_IDS = new Set<VnTextToolId>([
 ]);
 
 const OFFICE_IMAGE_IDS = new Set<OfficeImageToolId>([
+  'capture-to-text',
+  'signature-extractor',
   'image-converter',
   'image-resizer',
   'image-compressor',
@@ -43,6 +46,7 @@ const OFFICE_IMAGE_IDS = new Set<OfficeImageToolId>([
 ]);
 
 const DATA_SPREADSHEET_IDS = new Set<DataSpreadsheetToolId>([
+  'cccd-inspector',
   'vn-name-splitter',
   'list-deduplicator',
   'vat-percent-calculator',

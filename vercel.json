@@ -9,6 +9,7 @@
     { "source": "/pdf/vi/index.html", "destination": "/", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/launcher", "destination": "/index.html" },
     { "source": "/c/(.*)", "destination": "/index.html" },
     { "source": "/t/(.*)", "destination": "/index.html" }
   ],

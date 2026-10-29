@@ -257,6 +257,16 @@ textarea:focus {
 /* ===================== 5. PHẦN TỬ GỐC ĐƯỢC THAY BẰNG GIAO DIỆN bccHub ===================== */
 .bcc-orig-hidden { display: none !important; }
 
+/* Chế độ nhúng trong cửa sổ nổi Raycast Launcher (?embed=1) */
+:root[data-bcc-embed='1'] .bcc-shell,
+:root[data-bcc-embed='1'] .bcc-tool-head,
+:root[data-bcc-embed='1'] .bcc-footer {
+  display: none !important;
+}
+:root[data-bcc-embed='1'] .bcc-page {
+  padding: 12px 16px 20px !important;
+}
+
 /* ===================== 6. HEADER bccHub (bản sao HubShell) ===================== */
 .bcc-shell {
   width: 100%;

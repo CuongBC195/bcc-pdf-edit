@@ -91,6 +91,22 @@ export const INTERNAL_TOOLS: ToolDef[] = [
     ],
   },
   {
+    id: 'batch-qr-generator',
+    kind: 'internal',
+    name: 'Tạo Mã QR & Mã Vạch Hàng Loạt từ Excel (Xuất ZIP / Vỉ in A4)',
+    description:
+      'Dán cột dữ liệu từ Excel để sinh hàng loạt 50–500 tem Mã QR hoặc Mã vạch kèm nhãn tên; tải trọn bộ ảnh PNG (ZIP) hoặc dàn trang PDF A4 để in tem.',
+    icon: 'ph-squares-four',
+    badge: 'Hàng loạt',
+    keywords: [
+      'tao qr hang loat',
+      'batch qr generator',
+      'in tem qr a4',
+      'tao ma vach hang loat',
+      'qr tu excel',
+    ],
+  },
+  {
     id: 'number-to-words',
     kind: 'internal',
     name: 'Đọc số tiền thành chữ (VNĐ / USD)',
@@ -163,6 +179,41 @@ export const INTERNAL_TOOLS: ToolDef[] = [
     ],
   },
   {
+    id: 'capture-to-text',
+    kind: 'internal',
+    name: 'Capture to Text — Chụp màn hình / Dán ảnh lấy chữ (OCR Tiếng Việt)',
+    description:
+      'Chụp trực tiếp vùng màn hình hoặc bấm Ctrl+V dán ảnh chụp (Win+Shift+S, Zalo) để bóc tách chữ Tiếng Việt & Tiếng Anh tức thì, tự động Copy vào Clipboard.',
+    icon: 'ph-selection-plus',
+    badge: 'OCR Tức thì',
+    keywords: [
+      'capture to text',
+      'ocr anh sang chu',
+      'chup man hinh lay chu',
+      'quet chu tu anh',
+      'copy chu trong anh',
+      'textsniper',
+      'ocr tieng viet',
+    ],
+  },
+  {
+    id: 'signature-extractor',
+    kind: 'internal',
+    name: 'Tách chữ ký tay & Con dấu sang PNG trong suốt',
+    description:
+      'Khử nền giấy chụp điện thoại bị xám/vàng, giữ nguyên nét mực xanh, đỏ con dấu hoặc đen để xuất ảnh PNG trong suốt chèn vào Word, Excel và PDF.',
+    icon: 'ph-signature',
+    badge: 'Tách nền',
+    keywords: [
+      'tach chu ky',
+      'tach nen chu ky',
+      'tach con dau do',
+      'chu ky trong suot',
+      'xoa nen chu ky',
+      'signature transparent png',
+    ],
+  },
+  {
     id: 'id-card-merger',
     kind: 'internal',
     name: 'Ghép ảnh CCCD / Thẻ 2 mặt vào trang A4',
@@ -223,6 +274,23 @@ export const INTERNAL_TOOLS: ToolDef[] = [
       'resize image',
       'xoay anh',
       'lat anh',
+    ],
+  },
+  {
+    id: 'cccd-inspector',
+    kind: 'internal',
+    name: 'Giải mã & Kiểm tra CCCD 12 số hàng loạt (Tỉnh/Thành, Năm sinh, Giới tính)',
+    description:
+      'Dán cột số CCCD từ Excel để tự động tra cứu Tỉnh/Thành khai sinh (63 mã tỉnh), Giới tính, Năm sinh, Tuổi và tự bù số 0 đầu bị mất do Excel.',
+    icon: 'ph-identification-card',
+    badge: 'Hành chính',
+    keywords: [
+      'giai ma cccd',
+      'kiem tra cccd',
+      'ma tinh cccd',
+      'tra cuu 12 so cccd',
+      'bu so 0 cccd excel',
+      'can cuoc cong dan',
     ],
   },
   {
