@@ -549,6 +549,32 @@ export const App: React.FC = () => {
     [pdfMeta, defaultNamingPattern]
   );
 
+  // Safe unique name generator: prevents infinite loop when user's saved pattern lacks {cs}/{stt}/{index}
+  const generateUniqueRuleName = useCallback(
+    (startIdx: number, suggestedPages: number[], currentRules: SplitRule[]) => {
+      const existingNames = new Set(currentRules.map((r) => r.name.toLowerCase()));
+      let idxToUse = startIdx;
+      const baseCandidate = generateNewRuleName(idxToUse, suggestedPages);
+      const baseWithoutExt = baseCandidate.replace(/\.pdf$/i, '');
+      let candidateName = baseCandidate;
+
+      let attempts = 0;
+      while (existingNames.has(candidateName.toLowerCase()) && attempts < 500) {
+        idxToUse++;
+        attempts++;
+        const nextCandidate = generateNewRuleName(idxToUse, suggestedPages);
+        if (nextCandidate.toLowerCase() === baseCandidate.toLowerCase() || existingNames.has(nextCandidate.toLowerCase())) {
+          const suffixNum = idxToUse + 1;
+          candidateName = `${baseWithoutExt}_${suffixNum < 10 ? '0' + suffixNum : suffixNum}.pdf`;
+        } else {
+          candidateName = nextCandidate;
+        }
+      }
+      return candidateName;
+    },
+    [generateNewRuleName]
+  );
+
   // Create child rule from selected pages
   const handleCreateRuleFromSelected = () => {
     if (!pdfMeta || selectedPages.length === 0) return;
@@ -557,13 +583,7 @@ export const App: React.FC = () => {
     const nextIdx = rules.length + 1;
     const color = PRESET_COLORS[(nextIdx - 1) % PRESET_COLORS.length];
 
-    let idxToUse = rules.length;
-    let candidateName = generateNewRuleName(idxToUse, selectedPages);
-    const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
-    while (existingNames.has(candidateName.toLowerCase())) {
-      idxToUse++;
-      candidateName = generateNewRuleName(idxToUse, selectedPages);
-    }
+    const candidateName = generateUniqueRuleName(rules.length, selectedPages, rules);
 
     const newRule: SplitRule = {
       id: newRuleId,
@@ -599,7 +619,7 @@ export const App: React.FC = () => {
       if (pagesA.length > 0) {
         newRules.push({
           id: `rule_${Date.now()}_1`,
-          name: generateNewRuleName(0, pagesA),
+          name: generateUniqueRuleName(0, pagesA, newRules),
           pageRangeStr: formatPagesToRange(pagesA),
           pages: pagesA,
           color: PRESET_COLORS[0],
@@ -609,7 +629,7 @@ export const App: React.FC = () => {
       if (pagesB.length > 0) {
         newRules.push({
           id: `rule_${Date.now()}_2`,
-          name: generateNewRuleName(newRules.length, pagesB),
+          name: generateUniqueRuleName(newRules.length, pagesB, newRules),
           pageRangeStr: formatPagesToRange(pagesB),
           pages: pagesB,
           color: PRESET_COLORS[newRules.length],
@@ -647,13 +667,7 @@ export const App: React.FC = () => {
         pages: pagesA,
       };
 
-      let idxToUse = rules.length;
-      let candidateName = generateNewRuleName(idxToUse, pagesB);
-      const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
-      while (existingNames.has(candidateName.toLowerCase())) {
-        idxToUse++;
-        candidateName = generateNewRuleName(idxToUse, pagesB);
-      }
+      const candidateName = generateUniqueRuleName(rules.length, pagesB, rules);
 
       const ruleBId = `rule_${Date.now()}`;
       const ruleB: SplitRule = {
@@ -703,13 +717,7 @@ export const App: React.FC = () => {
 
       if (pagesB.length > 0) {
         const nextIdx = rules.length + 1;
-        let idxToUse = rules.length;
-        let candidateName = generateNewRuleName(idxToUse, pagesB);
-        const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
-        while (existingNames.has(candidateName.toLowerCase())) {
-          idxToUse++;
-          candidateName = generateNewRuleName(idxToUse, pagesB);
-        }
+        const candidateName = generateUniqueRuleName(rules.length, pagesB, rules);
 
         const newRuleId = `rule_${Date.now()}`;
         const newRule: SplitRule = {
@@ -742,13 +750,7 @@ export const App: React.FC = () => {
 
       if (pagesA.length > 0) {
         const nextIdx = rules.length + 1;
-        let idxToUse = rules.length;
-        let candidateName = generateNewRuleName(idxToUse, pagesA);
-        const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
-        while (existingNames.has(candidateName.toLowerCase())) {
-          idxToUse++;
-          candidateName = generateNewRuleName(idxToUse, pagesA);
-        }
+        const candidateName = generateUniqueRuleName(rules.length, pagesA, rules);
 
         const newRuleId = `rule_${Date.now()}`;
         const newRule: SplitRule = {
@@ -805,13 +807,7 @@ export const App: React.FC = () => {
     }
     if (suggestedPage === null) suggestedPage = 1;
 
-    let idxToUse = rules.length;
-    let candidateName = generateNewRuleName(idxToUse, [suggestedPage]);
-    const existingNames = new Set(rules.map((r) => r.name.toLowerCase()));
-    while (existingNames.has(candidateName.toLowerCase())) {
-      idxToUse++;
-      candidateName = generateNewRuleName(idxToUse, [suggestedPage]);
-    }
+    const candidateName = generateUniqueRuleName(rules.length, [suggestedPage], rules);
 
     const newRule: SplitRule = {
       id: `rule_${Date.now()}`,
@@ -924,7 +920,7 @@ export const App: React.FC = () => {
       const pageList = activePages.slice(i, i + n);
       newRules.push({
         id: `rule_n_${idx}`,
-        name: generateNewRuleName(idx - 1, pageList),
+        name: generateUniqueRuleName(idx - 1, pageList, newRules),
         pageRangeStr: formatPagesToRange(pageList),
         pages: pageList,
         color: PRESET_COLORS[(idx - 1) % PRESET_COLORS.length],
@@ -945,7 +941,7 @@ export const App: React.FC = () => {
       if (deletedSet.has(p)) continue;
       newRules.push({
         id: `rule_single_${p}`,
-        name: generateNewRuleName(idx, [p]),
+        name: generateUniqueRuleName(idx, [p], newRules),
         pageRangeStr: `${p}`,
         pages: [p],
         color: PRESET_COLORS[idx % PRESET_COLORS.length],
