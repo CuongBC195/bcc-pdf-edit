@@ -1,0 +1,365 @@
+/* Giao diện dùng chung cho bộ công cụ PDF nội bộ (src/pdf) */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pdft-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+.pdft-layout--single { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 980px) {
+  .pdft-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+.pdft-panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 16px;
+}
+@media (max-width: 980px) { .pdft-panel { position: static; } }
+
+.pdft-panel h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.pdft-main { padding: 16px; min-width: 0; }
+
+/* Vùng thả tệp */
+.pdft-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 20px;
+  text-align: center;
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.pdft-drop:hover, .pdft-drop.is-over, .pdft-drop:focus-visible {
+  border-color: var(--border-active);
+  background: rgba(6, 182, 212, 0.06);
+  outline: none;
+}
+.pdft-drop__icon { font-size: 2.4rem; color: var(--accent-cyan); }
+.pdft-drop__title { font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
+.pdft-drop__hint { font-size: 0.82rem; }
+
+.pdft-recent { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
+.pdft-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 280px;
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pdft-chip:hover, .pdft-chip:focus-visible { border-color: var(--border-active); color: var(--border-active); outline: none; }
+.pdft-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pdft-chip small { color: var(--text-dim); font-weight: 500; flex-shrink: 0; }
+
+/* Thanh tệp đang mở */
+.pdft-filebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-elevated);
+}
+.pdft-filebar__name { font-weight: 700; color: var(--text-main); overflow-wrap: anywhere; }
+.pdft-filebar__meta { font-size: 0.8rem; color: var(--text-dim); }
+.pdft-filebar__actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+
+.pdft-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+}
+.pdft-notice--success { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); }
+.pdft-notice--error { border-color: rgba(244, 63, 94, 0.45); background: rgba(244, 63, 94, 0.08); color: var(--text-main); }
+.pdft-notice--info { border-color: rgba(6, 182, 212, 0.35); background: rgba(6, 182, 212, 0.06); }
+.pdft-notice strong { color: var(--text-main); }
+
+/* Danh sách nhiều tệp */
+.pdft-files { display: flex; flex-direction: column; gap: 8px; }
+.pdft-file {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-elevated);
+}
+.pdft-file.is-dragging { opacity: 0.5; }
+.pdft-file.is-drop-target { border-color: var(--border-active); }
+.pdft-file__handle { cursor: grab; color: var(--text-dim); display: inline-flex; }
+.pdft-file__thumb {
+  width: 42px;
+  height: 56px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdft-file__thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.pdft-file__info { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pdft-file__name { font-weight: 600; font-size: 0.86rem; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pdft-file__meta { font-size: 0.76rem; color: var(--text-dim); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pdft-file__actions { display: flex; gap: 4px; }
+
+/* Lưới trang */
+.pdft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--pdft-thumb, 132px), 1fr));
+  gap: 14px;
+}
+.pdft-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  background: var(--bg-surface-elevated);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+.pdft-page:hover { border-color: var(--border-medium); }
+.pdft-page:focus-visible { outline: 2px solid var(--border-active); outline-offset: 2px; }
+.pdft-page.is-selected { border-color: var(--accent-cyan); background: rgba(6, 182, 212, 0.08); }
+.pdft-page.is-marked { border-color: var(--accent-rose); background: rgba(244, 63, 94, 0.07); }
+.pdft-page.is-marked .pdft-page__frame { opacity: 0.45; }
+.pdft-page.is-dragging { opacity: 0.4; }
+.pdft-page.is-drop-before::before,
+.pdft-page.is-drop-after::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent-cyan);
+}
+.pdft-page.is-drop-before::before { left: -9px; }
+.pdft-page.is-drop-after::after { right: -9px; }
+.pdft-page__frame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.pdft-page__frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
+  transition: transform var(--transition-fast);
+}
+.pdft-page__blank {
+  width: 70%;
+  aspect-ratio: 1 / 1.414;
+  background: #fff;
+  border: 1px dashed var(--border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+.pdft-page__label { font-size: 0.76rem; font-weight: 700; color: var(--text-muted); font-family: monospace; }
+.pdft-page__badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent-cyan);
+}
+.pdft-page__badge--rose { background: var(--accent-rose); }
+.pdft-page__badge--amber { background: var(--accent-amber); }
+.pdft-page__check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-cyan);
+}
+.pdft-page__actions {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+.pdft-page:hover .pdft-page__actions, .pdft-page:focus-within .pdft-page__actions { opacity: 1; }
+.pdft-icon-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+}
+.pdft-icon-btn:hover, .pdft-icon-btn:focus-visible { border-color: var(--border-active); color: var(--border-active); outline: none; }
+.pdft-icon-btn--danger:hover { border-color: var(--accent-rose); color: var(--accent-rose); }
+.pdft-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pdft-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.pdft-toolbar__spacer { flex: 1; }
+
+/* Điều khiển */
+.pdft-field { display: flex; flex-direction: column; gap: 6px; }
+.pdft-field > label, .pdft-field__label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+.pdft-field small { font-size: 0.74rem; color: var(--text-dim); line-height: 1.45; }
+.pdft-input, .pdft-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.86rem;
+}
+.pdft-input:focus, .pdft-select:focus { outline: none; border-color: var(--border-active); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15); }
+.pdft-input--sm { padding: 4px 8px; font-size: 0.78rem; }
+.pdft-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; }
+
+.pdft-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+}
+.pdft-seg button {
+  flex: 1 1 auto;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pdft-seg button[aria-pressed='true'] { background: var(--bg-surface); color: var(--text-main); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); }
+.pdft-seg button:focus-visible { outline: 2px solid var(--border-active); }
+
+.pdft-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text-main); cursor: pointer; }
+.pdft-toggle input { width: 16px; height: 16px; accent-color: var(--accent-cyan); }
+
+.pdft-actions { display: flex; flex-direction: column; gap: 8px; }
+.pdft-actions .btn { width: 100%; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+
+/* Kết quả */
+.pdft-results { display: flex; flex-direction: column; gap: 8px; }
+.pdft-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-elevated);
+  font-size: 0.82rem;
+}
+.pdft-result span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
+.pdft-result small { color: var(--text-dim); flex-shrink: 0; }
+
+.pdft-progress { height: 6px; border-radius: 3px; background: var(--bg-input); overflow: hidden; }
+.pdft-progress > div { height: 100%; background: linear-gradient(90deg, #06b6d4, #0284c7); transition: width 0.2s ease; }
+
+.pdft-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.pdft-table th, .pdft-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); text-align: left; }
+.pdft-table th { color: var(--text-dim); font-weight: 600; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.pdft-table td { color: var(--text-main); }
+
+.pdft-preview {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+}
+.pdft-preview canvas, .pdft-preview img { max-width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+
+.pdft-empty { padding: 32px 16px; text-align: center; color: var(--text-dim); font-size: 0.86rem; }
+
+.pdft-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

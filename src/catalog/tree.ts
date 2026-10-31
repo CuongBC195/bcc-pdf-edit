@@ -12,7 +12,7 @@ export const CATEGORY_TREE: CategoryDef[] = [
   {
     slug: 'xu-ly-pdf',
     name: 'Xử lý PDF',
-    description: 'Trọn bộ 119 công cụ tách, gộp, chỉnh sửa, chuyển đổi Office/ảnh, OCR và ký số PDF.',
+    description: 'Tách, gộp, sắp xếp trang, chỉnh sửa, chuyển đổi Office/ảnh, OCR và ký số PDF.',
     icon: 'ph-file-pdf',
     accent: '#06b6d4',
     children: [

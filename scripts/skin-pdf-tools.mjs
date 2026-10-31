@@ -47,13 +47,16 @@ async function importTs(relPath) {
 
 const { CATEGORY_TREE } = await importTs('src/catalog/tree.ts');
 const { INTERNAL_TOOLS } = await importTs('src/catalog/internalTools.ts');
+const { PDF_TOOLS } = await importTs('src/pdf/registry.ts');
 const bentoTools = JSON.parse(
   fs.readFileSync(path.join(ROOT, 'src/catalog/bentoTools.generated.json'), 'utf8')
 );
 
 const toolsById = new Map();
-for (const t of INTERNAL_TOOLS) toolsById.set(t.id, { ...t, kind: 'internal' });
+for (const t of [...INTERNAL_TOOLS, ...PDF_TOOLS]) toolsById.set(t.id, { ...t, kind: 'internal' });
 for (const t of bentoTools) {
+  // Công cụ đã có bản tự xây (/t/<id>) thì không dùng thông tin bản cũ
+  if (toolsById.has(t.id)) continue;
   toolsById.set(t.id, {
     id: t.id,
     kind: 'bento',

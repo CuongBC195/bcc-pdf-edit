@@ -1,29 +1,92 @@
 {
   "version": 2,
   "redirects": [
-    { "source": "/pdf", "destination": "/", "permanent": false },
-    { "source": "/pdf/", "destination": "/", "permanent": false },
-    { "source": "/pdf/index.html", "destination": "/", "permanent": false },
-    { "source": "/pdf/vi", "destination": "/", "permanent": false },
-    { "source": "/pdf/vi/", "destination": "/", "permanent": false },
-    { "source": "/pdf/vi/index.html", "destination": "/", "permanent": false },
-    { "source": "/pdf/vi/c/:path*", "destination": "/c/:path*", "permanent": false },
-    { "source": "/pdf/vi/t/:path*", "destination": "/t/:path*", "permanent": false },
-    { "source": "/pdf/c/:path*", "destination": "/c/:path*", "permanent": false },
-    { "source": "/pdf/t/:path*", "destination": "/t/:path*", "permanent": false }
+    {
+      "source": "/pdf",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/index.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/vi",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/vi/",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/vi/index.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/vi/c/:path*",
+      "destination": "/c/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/vi/t/:path*",
+      "destination": "/t/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/c/:path*",
+      "destination": "/c/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/t/:path*",
+      "destination": "/t/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/pdf/:lang(vi|en)?/:id(merge-pdf|split-pdf|extract-pages|alternate-merge|duplex-collate|overlay-pdf|pdf-to-zip|pdf-multi-tool|organize-pdf|delete-pages|add-blank-page|remove-blank-pages|reverse-pages|rotate-pdf|rotate-custom|divide-pages|combine-single-page|crop-pdf|n-up-pdf|pdf-booklet|posterize-pdf|fix-page-size|page-dimensions)\\.html",
+      "destination": "/t/:id",
+      "permanent": false
+    }
   ],
   "rewrites": [
-    { "source": "/launcher", "destination": "/index.html" },
-    { "source": "/c/(.*)", "destination": "/index.html" },
-    { "source": "/t/(.*)", "destination": "/index.html" }
+    {
+      "source": "/launcher",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/c/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/t/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
     }
   ]

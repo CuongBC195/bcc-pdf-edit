@@ -5,20 +5,25 @@ import type { PDFBookmarkItem } from '../types/pdf';
 // Configure pdfjs worker using Vite asset URL
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 
-// Cache loaded PDFDocumentProxy promise to avoid race conditions and duplicate worker loading
-let cachedPromise: Promise<any> | null = null;
-let cachedBuffer: ArrayBuffer | null = null;
+// Cache PDFDocumentProxy theo từng ArrayBuffer (LRU nhỏ) để nhiều tệp/công cụ dùng chung mà không tải lại
+const MAX_CACHED_DOCS = 6;
+const docCache = new Map<ArrayBuffer, Promise<any>>();
 
 export function resetPdfDocumentCache() {
-  cachedPromise = null;
-  cachedBuffer = null;
+  for (const p of docCache.values()) {
+    p.then((doc) => doc?.destroy?.()).catch(() => {});
+  }
+  docCache.clear();
 }
 
 export async function getPdfDocumentProxy(arrayBuffer: ArrayBuffer) {
-  if (cachedBuffer === arrayBuffer && cachedPromise) {
-    return cachedPromise;
+  const cached = docCache.get(arrayBuffer);
+  if (cached) {
+    // Đánh dấu vừa dùng
+    docCache.delete(arrayBuffer);
+    docCache.set(arrayBuffer, cached);
+    return cached;
   }
-  cachedBuffer = arrayBuffer;
 
   const base = typeof window !== 'undefined' ? window.location.origin : '';
   const wasmUrl = `${base}/pdfjs/wasm/`;
@@ -36,14 +41,20 @@ export async function getPdfDocumentProxy(arrayBuffer: ArrayBuffer) {
     standardFontDataUrl,
   });
 
-  cachedPromise = loadingTask.promise.catch((err) => {
+  const promise = loadingTask.promise.catch((err) => {
     // Reset cache on failure so next attempt doesn't reuse rejected promise
-    cachedPromise = null;
-    cachedBuffer = null;
+    docCache.delete(arrayBuffer);
     throw err;
   });
+  docCache.set(arrayBuffer, promise);
 
-  return cachedPromise;
+  while (docCache.size > MAX_CACHED_DOCS) {
+    const [oldestKey, oldest] = docCache.entries().next().value as [ArrayBuffer, Promise<any>];
+    docCache.delete(oldestKey);
+    oldest.then((doc) => doc?.destroy?.()).catch(() => {});
+  }
+
+  return promise;
 }
 
 /**

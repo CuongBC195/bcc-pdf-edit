@@ -9,6 +9,7 @@ import type { VnTextToolId } from '../tools/VietnameseTextTools';
 import type { OfficeImageToolId } from '../tools/OfficeImageTools';
 import type { DataSpreadsheetToolId } from '../tools/DataSpreadsheetTools';
 import type { TimeAdminToolId } from '../tools/TimeAdminTools';
+import { PDF_TOOL_COMPONENTS } from '../pdf/components';
 
 const MultiSplitToolApp = React.lazy(() => import('../App'));
 const QrToolPage = React.lazy(() => import('../tools/QrToolPage'));
@@ -90,6 +91,16 @@ export const InternalToolPage: React.FC = () => {
     return (
       <Suspense fallback={loadingFallback}>
         <MultiSplitToolApp />
+      </Suspense>
+    );
+  }
+
+  const PdfTool = PDF_TOOL_COMPONENTS[resolvedId];
+  if (PdfTool) {
+    return (
+      <Suspense fallback={loadingFallback}>
+        {/* key: đổi công cụ thì dựng lại toàn bộ trạng thái */}
+        <PdfTool key={resolvedId} />
       </Suspense>
     );
   }

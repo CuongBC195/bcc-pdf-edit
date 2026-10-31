@@ -4,6 +4,18 @@ import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 
+/** id các công cụ PDF đã tự xây (đọc từ src/pdf/registry.ts, giống scripts/sync-pdf-redirects.mjs) */
+function readPdfToolIds(): Set<string> {
+  try {
+    const src = fs.readFileSync(path.resolve(import.meta.dirname, 'src/pdf/registry.ts'), 'utf8');
+    const block = src.slice(src.indexOf('PDF_TOOLS'), src.indexOf('PDF_TOOL_IDS'));
+    return new Set([...block.matchAll(/pdf\('([a-z0-9-]+)'/g)].map((m) => m[1]));
+  } catch {
+    return new Set();
+  }
+}
+const PDF_TOOL_IDS = readPdfToolIds();
+
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -56,6 +68,15 @@ function createPdfEngineMiddleware(bentoDistDir: string) {
     if (hubRoute) {
       res.statusCode = 302;
       res.setHeader('Location', `/${hubRoute[1]}/${hubRoute[2]}`);
+      res.end();
+      return;
+    }
+
+    // Công cụ đã có bản tự xây -> chuyển sang /t/<id> (đồng bộ với vercel.json)
+    const legacyTool = rawPath.match(/^\/pdf\/(?:(?:vi|en)\/)?([a-z0-9-]+)\.html$/);
+    if (legacyTool && PDF_TOOL_IDS.has(legacyTool[1])) {
+      res.statusCode = 302;
+      res.setHeader('Location', `/t/${legacyTool[1]}`);
       res.end();
       return;
     }

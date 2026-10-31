@@ -1,6 +1,7 @@
 import bentoToolsRaw from './bentoTools.generated.json';
 import { CATEGORY_TREE, POPULAR_TOOL_IDS } from './tree';
 import { INTERNAL_TOOLS } from './internalTools';
+import { PDF_TOOLS, PDF_TOOL_IDS, RETIRED_TOOL_IDS } from '../pdf/registry';
 import type { CategoryDef, CategoryNode, IconName, ToolDef, ToolLocation } from './types';
 
 export type { CategoryDef, CategoryNode, IconName, ToolDef, ToolKind, ToolLocation } from './types';
@@ -13,16 +14,19 @@ const TOOL_ALIASES: Record<string, string> = {
   'qr-studio': 'qr-generator',
 };
 
-const bentoTools: ToolDef[] = bentoToolsRaw.map((item) => ({
-  id: item.id,
-  kind: 'bento',
-  name: item.name,
-  description: item.description,
-  icon: (item.icon || 'ph-file-pdf') as IconName,
-  keywords: [item.nameEn, item.id.replace(/-/g, ' ')].filter(Boolean),
-}));
+// Công cụ BentoPDF chưa được viết lại (bỏ các id đã có bản tự xây và các định dạng đã ngừng hỗ trợ)
+const bentoTools: ToolDef[] = bentoToolsRaw
+  .filter((item) => !PDF_TOOL_IDS.has(item.id) && !RETIRED_TOOL_IDS.has(item.id))
+  .map((item) => ({
+    id: item.id,
+    kind: 'bento',
+    name: item.name,
+    description: item.description,
+    icon: (item.icon || 'ph-file-pdf') as IconName,
+    keywords: [item.nameEn, item.id.replace(/-/g, ' ')].filter(Boolean),
+  }));
 
-export const ALL_TOOLS: readonly ToolDef[] = [...INTERNAL_TOOLS, ...bentoTools];
+export const ALL_TOOLS: readonly ToolDef[] = [...INTERNAL_TOOLS, ...PDF_TOOLS, ...bentoTools];
 
 export const TOOLS_BY_ID: ReadonlyMap<string, ToolDef> = new Map(
   ALL_TOOLS.map((tool) => [tool.id, tool])
