@@ -128,7 +128,7 @@ export const CATEGORY_TREE: CategoryDef[] = [
       {
         slug: 'hinh-anh',
         name: 'Từ hình ảnh',
-        description: 'JPG, PNG, WebP, HEIC, SVG, BMP, TIFF, PSD sang PDF.',
+        description: 'JPG, PNG, WebP, HEIC, SVG, BMP, TIFF sang PDF.',
         icon: 'ph-image',
         tools: [
           'image-to-pdf',
@@ -139,21 +139,20 @@ export const CATEGORY_TREE: CategoryDef[] = [
           'svg-to-pdf',
           'bmp-to-pdf',
           'tiff-to-pdf',
-          'psd-to-pdf',
         ],
       },
       {
         slug: 'van-phong',
         name: 'Từ tài liệu văn phòng',
-        description: 'Microsoft Office, OpenDocument (LibreOffice) và các định dạng khác.',
+        description: 'Microsoft Office, OpenDocument (LibreOffice) và RTF.',
         icon: 'ph-briefcase',
         children: [
           {
             slug: 'microsoft-office',
             name: 'Microsoft Office',
-            description: 'Word, Excel, PowerPoint, Publisher, Visio, XPS.',
+            description: 'Word (.docx), Excel (.xlsx), PowerPoint (.pptx).',
             icon: 'ph-microsoft-word-logo',
-            tools: ['word-to-pdf', 'excel-to-pdf', 'powerpoint-to-pdf', 'pub-to-pdf', 'vsd-to-pdf', 'xps-to-pdf'],
+            tools: ['word-to-pdf', 'excel-to-pdf', 'powerpoint-to-pdf'],
           },
           {
             slug: 'opendocument',
@@ -165,9 +164,9 @@ export const CATEGORY_TREE: CategoryDef[] = [
           {
             slug: 'dinh-dang-khac',
             name: 'Định dạng khác',
-            description: 'RTF, WPS, WordPerfect, Apple Pages.',
+            description: 'Rich Text Format (.rtf).',
             icon: 'ph-file-text',
-            tools: ['rtf-to-pdf', 'wps-to-pdf', 'wpd-to-pdf', 'pages-to-pdf'],
+            tools: ['rtf-to-pdf'],
           },
         ],
       },
@@ -181,9 +180,9 @@ export const CATEGORY_TREE: CategoryDef[] = [
       {
         slug: 'ebook-truyen',
         name: 'Từ Ebook & Truyện tranh',
-        description: 'EPUB, MOBI, FB2, CBZ.',
+        description: 'EPUB, FB2, CBZ.',
         icon: 'ph-book-open',
-        tools: ['epub-to-pdf', 'mobi-to-pdf', 'fb2-to-pdf', 'cbz-to-pdf'],
+        tools: ['epub-to-pdf', 'fb2-to-pdf', 'cbz-to-pdf'],
       },
     ],
   },
@@ -272,14 +271,6 @@ export const CATEGORY_TREE: CategoryDef[] = [
         tools: ['sanitize-pdf', 'remove-metadata', 'view-metadata', 'edit-metadata'],
       },
     ],
-  },
-  {
-    slug: 'tu-dong-hoa',
-    name: 'Tự động hóa',
-    description: 'Xây dựng quy trình xử lý PDF nhiều bước bằng sơ đồ trực quan.',
-    icon: 'ph-tree-structure',
-    accent: '#14b8a6',
-    tools: ['pdf-workflow'],
   },
     ],
   },
