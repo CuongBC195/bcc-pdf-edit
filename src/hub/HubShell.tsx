@@ -21,6 +21,25 @@ export const HubShell: React.FC<HubShellProps> = ({ children, hideSidebar = fals
   const [isSearchOpen, setIsSearchOpen] = useState(
     () => new URLSearchParams(window.location.search).get('search') === '1'
   );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('bcc_hub_sidebar_collapsed_v1') === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebarCollapsed = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('bcc_hub_sidebar_collapsed_v1', next ? '1' : '0');
+      } catch {
+        // Bỏ qua lỗi localStorage
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute('translate', 'no');
@@ -158,8 +177,22 @@ export const HubShell: React.FC<HubShellProps> = ({ children, hideSidebar = fals
         </div>
       </header>
 
-      <div className={hideSidebar ? 'hub-workspace hub-workspace--single' : 'hub-workspace'}>
-        {!hideSidebar && <CategorySidebar />}
+      <div
+        className={
+          hideSidebar
+            ? 'hub-workspace hub-workspace--single'
+            : isSidebarCollapsed
+              ? 'hub-workspace hub-workspace--collapsed'
+              : 'hub-workspace'
+        }
+      >
+        {!hideSidebar && (
+          <CategorySidebar
+            collapsed={isSidebarCollapsed}
+            onToggleCollapse={toggleSidebarCollapsed}
+            onOpenCommandPalette={() => setIsSearchOpen(true)}
+          />
+        )}
         <main className="hub-main">{children}</main>
       </div>
 

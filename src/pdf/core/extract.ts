@@ -267,3 +267,4 @@ export async function extractImagesFromPdf(
   }
   return out;
 }
+

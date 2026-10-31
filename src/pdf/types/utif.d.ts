@@ -9,3 +9,4 @@ declare module 'utif' {
   export function toRGBA8(ifd: IFD): Uint8Array;
   export function encodeImage(rgba: ArrayBuffer | Uint8Array, w: number, h: number): ArrayBuffer;
 }
+
