@@ -275,6 +275,14 @@ function skinDocument(document, toolId) {
   if (lastScript) lastScript.insertAdjacentHTML('beforebegin', FOOTER_HTML);
   else document.body.insertAdjacentHTML('beforeend', FOOTER_HTML);
 
+  // Link về Hub (/, /?search=1, /c/..., /t/...) phải giữ nguyên: rewriteLinks() của BentoPDF
+  // tự chèn tiền tố /pdf/vi/ vào mọi href bắt đầu bằng "/" -> 404 trên Vercel.
+  // shell.js dựa vào data-bcc-href để khôi phục href gốc.
+  for (const a of document.querySelectorAll('[data-bcchub] a[href^="/"], a[data-bcchub][href^="/"]')) {
+    const href = a.getAttribute('href');
+    if (href && !href.startsWith('/pdf/')) a.setAttribute('data-bcc-href', href);
+  }
+
   document.documentElement.setAttribute('translate', 'no');
   document.documentElement.classList.add('notranslate');
 

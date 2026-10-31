@@ -536,3 +536,67 @@ textarea:focus {
   .bcc-brand__sub, .bcc-safe, .bcc-search kbd { display: none; }
   #uploader, .bcc-shell, .bcc-tool-head--standalone { padding-left: 12px !important; padding-right: 12px !important; }
 }
+
+/* Thanh phiên làm việc: "Đã mở lại tệp lần trước" / "Tệp gần đây" (shell.js) */
+.bcc-session-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  font-family: var(--bcc-font-sans);
+  font-size: 0.84rem;
+  color: var(--bcc-muted);
+  background: var(--bcc-card);
+  border: 1px solid var(--bcc-border);
+  border-radius: var(--bcc-radius-md);
+  box-shadow: var(--bcc-shadow);
+}
+.bcc-session-bar--restored {
+  border-left: 4px solid #10b981;
+}
+.bcc-session-bar__text strong { color: var(--bcc-text); font-weight: 700; }
+.bcc-session-bar__text { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.bcc-session-bar__chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; }
+.bcc-session-bar__actions { display: inline-flex; align-items: center; gap: 6px; }
+.bcc-session-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--bcc-text);
+  background: var(--bcc-input);
+  border: 1px solid var(--bcc-border);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.bcc-session-chip:hover { border-color: var(--bcc-active); color: var(--bcc-active); }
+.bcc-session-chip:focus-visible, .bcc-session-btn:focus-visible { outline: 2px solid var(--bcc-active); outline-offset: 2px; }
+.bcc-session-chip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bcc-session-chip__size { flex-shrink: 0; font-weight: 500; color: var(--bcc-dim); }
+.bcc-session-btn {
+  padding: 5px 12px;
+  border-radius: var(--bcc-radius-sm);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--bcc-text);
+  background: var(--bcc-surface);
+  border: 1px solid var(--bcc-border-medium);
+  cursor: pointer;
+}
+.bcc-session-btn:hover { border-color: var(--bcc-active); color: var(--bcc-active); }
+.bcc-session-btn--ghost {
+  padding: 2px 9px;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--bcc-dim);
+  background: transparent;
+  border-color: transparent;
+}

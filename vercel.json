@@ -6,7 +6,11 @@
     { "source": "/pdf/index.html", "destination": "/", "permanent": false },
     { "source": "/pdf/vi", "destination": "/", "permanent": false },
     { "source": "/pdf/vi/", "destination": "/", "permanent": false },
-    { "source": "/pdf/vi/index.html", "destination": "/", "permanent": false }
+    { "source": "/pdf/vi/index.html", "destination": "/", "permanent": false },
+    { "source": "/pdf/vi/c/:path*", "destination": "/c/:path*", "permanent": false },
+    { "source": "/pdf/vi/t/:path*", "destination": "/t/:path*", "permanent": false },
+    { "source": "/pdf/c/:path*", "destination": "/c/:path*", "permanent": false },
+    { "source": "/pdf/t/:path*", "destination": "/t/:path*", "permanent": false }
   ],
   "rewrites": [
     { "source": "/launcher", "destination": "/index.html" },

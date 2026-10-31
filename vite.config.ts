@@ -51,6 +51,15 @@ function createPdfEngineMiddleware(bentoDistDir: string) {
       return;
     }
 
+    // Đồng bộ với vercel.json: link Hub bị rewriteLinks() chèn tiền tố /pdf/vi/
+    const hubRoute = rawPath.match(/^\/pdf(?:\/vi)?\/(c|t)\/(.*)$/);
+    if (hubRoute) {
+      res.statusCode = 302;
+      res.setHeader('Location', `/${hubRoute[1]}/${hubRoute[2]}`);
+      res.end();
+      return;
+    }
+
     const relPath = decodeURIComponent(rawPath.replace(/^\/pdf\/?/, ''));
     const safePath = path.normalize(relPath).replace(/^(\.\.(\/|\\|$))+/, '');
     let filePath = path.join(bentoDistDir, safePath);
